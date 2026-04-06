@@ -3,14 +3,20 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAYPDBWQp5nsXdSdArZZpGpJjBRpApoQh0",
-  authDomain: "samskruthi-auth-b8ee6.firebaseapp.com",
-  projectId: "samskruthi-auth-b8ee6",
-  storageBucket: "samskruthi-auth-b8ee6.firebasestorage.app",
-  messagingSenderId: "432703729927",
-  appId: "1:432703729927:web:8fe24ee00bba99a77e55a2",
-  measurementId: "G-L65Q0NZCB4"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
+
+// Validate Firebase config
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.error('❌ Firebase configuration incomplete. Check your .env file.');
+  throw new Error('Firebase configuration is missing required environment variables');
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
