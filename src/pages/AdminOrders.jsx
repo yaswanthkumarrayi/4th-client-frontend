@@ -137,13 +137,45 @@ const AdminOrders = () => {
   };
 
   // Status options for dropdown - use shared constants
+  // CRITICAL: Each option MUST have a valid string value - never undefined
   const statusOptions = [
-    { value: 'confirmed', label: ORDER_STATUS_LABELS.confirmed, icon: CheckCircle },
-    { value: 'processing', label: ORDER_STATUS_LABELS.processing, icon: Package },
-    { value: 'out_for_delivery', label: ORDER_STATUS_LABELS.out_for_delivery, icon: Truck },
-    { value: 'delivered', label: ORDER_STATUS_LABELS.delivered, icon: CheckCircle },
-    { value: 'cancelled', label: ORDER_STATUS_LABELS.cancelled, icon: X }
+    { value: 'confirmed', label: ORDER_STATUS_LABELS.confirmed || 'Confirmed', icon: CheckCircle },
+    { value: 'processing', label: ORDER_STATUS_LABELS.processing || 'Processing', icon: Package },
+    { value: 'out_for_delivery', label: ORDER_STATUS_LABELS.out_for_delivery || 'Out for Delivery', icon: Truck },
+    { value: 'delivered', label: ORDER_STATUS_LABELS.delivered || 'Delivered', icon: CheckCircle },
+    { value: 'cancelled', label: ORDER_STATUS_LABELS.cancelled || 'Cancelled', icon: X }
   ];
+  
+  // Handler for status button clicks - ensures status is NEVER undefined
+  const handleStatusClick = (orderId, status) => {
+    // CRITICAL: Extra safeguard to prevent undefined status
+    console.log('🔘 Status button clicked:', { orderId, status, type: typeof status });
+    
+    // Guard 1: Check basic validity
+    if (!status || typeof status !== 'string' || status.trim() === '') {
+      console.error('❌ handleStatusClick: Invalid status prevented:', { status, type: typeof status });
+      alert('Error: Cannot update status - invalid value detected');
+      return;
+    }
+    
+    // Guard 2: Check for string 'undefined' or 'null' (common bug)
+    const normalized = status.trim().toLowerCase();
+    if (normalized === 'undefined' || normalized === 'null') {
+      console.error('❌ handleStatusClick: Status is string "undefined"/"null"');
+      alert('Error: Invalid status value. Please refresh the page and try again.');
+      return;
+    }
+    
+    // Guard 3: Validate against allowed statuses
+    if (!ORDER_STATUS.includes(normalized)) {
+      console.error('❌ handleStatusClick: Status not in allowed list:', { status: normalized, allowed: ORDER_STATUS });
+      alert(`Error: "${status}" is not a valid status.\nAllowed: ${ORDER_STATUS.join(', ')}`);
+      return;
+    }
+    
+    // All guards passed, proceed with update
+    updateStatus(orderId, status);
+  };
 
   // Filter options - use shared constants
   const filterOptions = ['all', ...ORDER_STATUS.filter(s => s !== 'cancelled')];
@@ -318,11 +350,46 @@ const AdminOrders = () => {
               {/* Update Status */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3 font-montserrat">Update Status</h3>
+                
+                {/* Dropdown Alternative (more reliable) */}
+                <div className="mb-4">
+                  <select
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={selectedOrder.orderStatus || 'pending'}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      console.log('📝 Dropdown changed:', { newStatus, type: typeof newStatus, isEmpty: newStatus === '', isValid: ORDER_STATUS.includes(newStatus) });
+                      
+                      // CRITICAL: Prevent empty/undefined values
+                      if (!newStatus || newStatus === '' || newStatus === 'undefined' || newStatus === 'null') {
+                        console.error('❌ Dropdown: Invalid status value prevented:', newStatus);
+                        alert('Error: Invalid status selected. Please choose a valid status.');
+                        return;
+                      }
+                      
+                      // Only update if status actually changed
+                      if (newStatus !== selectedOrder.orderStatus) {
+                        handleStatusClick(selectedOrder.orderId, newStatus);
+                      }
+                    }}
+                    disabled={updating}
+                  >
+                    {/* Remove disabled empty option that could cause issues */}
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="processing">Processing</option>
+                    <option value="out_for_delivery">Out for Delivery</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                
+                {/* Quick Status Buttons */}
                 <div className="flex flex-wrap gap-2">
                   {statusOptions.map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
-                      onClick={() => updateStatus(selectedOrder.orderId, value)}
+                      onClick={() => handleStatusClick(selectedOrder.orderId, value)}
                       disabled={updating || selectedOrder.orderStatus === value}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium font-montserrat transition-colors ${
                         selectedOrder.orderStatus === value
