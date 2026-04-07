@@ -108,6 +108,13 @@ export const adminAPI = {
   updateProduct: async (productId, data) => {
     // CRITICAL: Multi-layer validation to prevent "No valid fields" errors
     
+    console.log('═══════════════════════════════════════════');
+    console.log('📦 adminAPI.updateProduct CALLED');
+    console.log('   productId:', productId, '(type:', typeof productId, ')');
+    console.log('   data:', JSON.stringify(data));
+    console.log('   data keys:', data ? Object.keys(data) : 'N/A');
+    console.log('═══════════════════════════════════════════');
+    
     // Layer 1: Check productId
     if (productId === undefined || productId === null) {
       console.error('❌ adminAPI.updateProduct: productId is undefined/null');
@@ -134,25 +141,29 @@ export const adminAPI = {
       const price = Number(data.pricePerKg);
       if (!isNaN(price) && price > 0) {
         cleanedData.pricePerKg = price;
+        console.log('📌 pricePerKg will be set to:', cleanedData.pricePerKg);
       } else {
         console.warn('⚠️ adminAPI.updateProduct: Invalid pricePerKg ignored:', data.pricePerKg);
       }
     }
     
     // inStock - boolean (MUST handle false correctly!)
-    if (data.inStock !== undefined && data.inStock !== null) {
-      // Explicitly convert to boolean, handling both true/false and 'true'/'false' strings
-      cleanedData.inStock = data.inStock === true || data.inStock === 'true';
-      console.log('📌 inStock will be set to:', cleanedData.inStock, '(input was:', data.inStock, ')');
+    // CRITICAL: Check for explicit presence of inStock field, including false value
+    if ('inStock' in data) {
+      // Convert to boolean - handles true, false, 'true', 'false', 1, 0
+      const boolValue = data.inStock === true || data.inStock === 'true' || data.inStock === 1;
+      cleanedData.inStock = boolValue;
+      console.log('📌 inStock will be set to:', cleanedData.inStock, '(input was:', data.inStock, ', type:', typeof data.inStock, ')');
     }
     
     // isActive - boolean
-    if (data.isActive !== undefined && data.isActive !== null) {
-      cleanedData.isActive = data.isActive === true || data.isActive === 'true';
+    if ('isActive' in data) {
+      cleanedData.isActive = data.isActive === true || data.isActive === 'true' || data.isActive === 1;
+      console.log('📌 isActive will be set to:', cleanedData.isActive);
     }
     
     // stockQuantity - number >= 0 or null
-    if (data.stockQuantity !== undefined) {
+    if ('stockQuantity' in data) {
       if (data.stockQuantity === null || data.stockQuantity === '') {
         cleanedData.stockQuantity = null;
       } else {
@@ -161,35 +172,45 @@ export const adminAPI = {
           cleanedData.stockQuantity = qty;
         }
       }
+      console.log('📌 stockQuantity will be set to:', cleanedData.stockQuantity);
     }
     
     // name - non-empty string
     if (data.name !== undefined && data.name !== null && String(data.name).trim() !== '') {
       cleanedData.name = String(data.name).trim();
+      console.log('📌 name will be set to:', cleanedData.name);
     }
     
     // category - string
     if (data.category !== undefined && data.category !== null && data.category !== '') {
       cleanedData.category = data.category;
+      console.log('📌 category will be set to:', cleanedData.category);
     }
     
     // Layer 4: Check if we have any valid fields to update
+    console.log('📋 cleanedData after processing:', JSON.stringify(cleanedData));
+    console.log('📋 cleanedData keys:', Object.keys(cleanedData));
+    
     if (Object.keys(cleanedData).length === 0) {
       console.error('❌ adminAPI.updateProduct: No valid fields to update');
       console.error('   Original data:', JSON.stringify(data));
+      console.error('   This error occurs when:');
+      console.error('   1. pricePerKg is 0, negative, or not a number');
+      console.error('   2. inStock is not explicitly set in the data object');
+      console.error('   3. All fields are undefined/null/empty');
       return { success: false, message: 'No valid fields provided for update. Please provide pricePerKg, inStock, isActive, or stockQuantity.' };
     }
     
     // Layer 5: Log and send
-    console.log('📤 adminAPI.updateProduct:', { 
-      productId: numericProductId, 
-      originalData: data,
-      cleanedData 
-    });
+    const payload = JSON.stringify(cleanedData);
+    console.log('📤 SENDING TO BACKEND:');
+    console.log('   URL: /admin/products/' + numericProductId);
+    console.log('   Method: PUT');
+    console.log('   Body:', payload);
     
     return adminApiCall(`/admin/products/${numericProductId}`, {
       method: 'PUT',
-      body: JSON.stringify(cleanedData)
+      body: payload
     });
   },
   

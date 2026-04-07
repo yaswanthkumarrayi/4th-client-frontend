@@ -41,7 +41,12 @@ const AdminProducts = () => {
 
   const updateProduct = async (productId, updateData) => {
     // CRITICAL: Multi-layer validation before sending to prevent errors
-    console.log('🔄 updateProduct called with:', { productId, updateData });
+    console.log('═══════════════════════════════════════════');
+    console.log('🔄 AdminProducts.updateProduct CALLED');
+    console.log('   productId:', productId, '(type:', typeof productId, ')');
+    console.log('   updateData:', JSON.stringify(updateData));
+    console.log('   updateData keys:', updateData ? Object.keys(updateData) : 'N/A');
+    console.log('═══════════════════════════════════════════');
     
     // Layer 1: Validate updateData object
     if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
@@ -66,20 +71,22 @@ const AdminProducts = () => {
       const price = Number(updateData.pricePerKg);
       if (!isNaN(price) && price > 0) {
         cleanedData.pricePerKg = price;
+        console.log('📌 pricePerKg accepted:', cleanedData.pricePerKg);
       } else {
         console.warn('⚠️ Invalid pricePerKg ignored:', updateData.pricePerKg);
       }
     }
     
-    // inStock - boolean (MUST handle false correctly!)
-    if (updateData.inStock !== undefined && updateData.inStock !== null) {
-      // Explicitly handle boolean conversion
+    // inStock - boolean (CRITICAL: MUST handle false correctly!)
+    // Use 'in' operator to check if key exists, even if value is false
+    if ('inStock' in updateData) {
+      // Explicitly handle boolean conversion - false should stay false!
       cleanedData.inStock = updateData.inStock === true || updateData.inStock === 'true';
-      console.log('📌 inStock will be:', cleanedData.inStock, '(input:', updateData.inStock, ')');
+      console.log('📌 inStock accepted:', cleanedData.inStock, '(input:', updateData.inStock, ', type:', typeof updateData.inStock, ')');
     }
     
     // stockQuantity - number >= 0 or null
-    if (updateData.stockQuantity !== undefined) {
+    if ('stockQuantity' in updateData) {
       if (updateData.stockQuantity === null || updateData.stockQuantity === '') {
         cleanedData.stockQuantity = null;
       } else {
@@ -88,14 +95,19 @@ const AdminProducts = () => {
           cleanedData.stockQuantity = qty;
         }
       }
+      console.log('📌 stockQuantity accepted:', cleanedData.stockQuantity);
     }
     
     // isActive - boolean
-    if (updateData.isActive !== undefined && updateData.isActive !== null) {
+    if ('isActive' in updateData) {
       cleanedData.isActive = updateData.isActive === true || updateData.isActive === 'true';
+      console.log('📌 isActive accepted:', cleanedData.isActive);
     }
     
     // Layer 4: Check if we have any valid fields
+    console.log('📋 Final cleanedData:', JSON.stringify(cleanedData));
+    console.log('📋 cleanedData keys:', Object.keys(cleanedData));
+    
     if (Object.keys(cleanedData).length === 0) {
       console.error('❌ No valid fields to update');
       console.error('   Original data:', JSON.stringify(updateData));
@@ -103,7 +115,7 @@ const AdminProducts = () => {
       return;
     }
     
-    console.log('📤 Sending update:', { productId: numericProductId, cleanedData });
+    console.log('📤 Calling adminAPI.updateProduct with:', { productId: numericProductId, cleanedData });
     
     try {
       setSaving(numericProductId);
@@ -132,6 +144,13 @@ const AdminProducts = () => {
   };
 
   const toggleStock = async (product) => {
+    console.log('═══════════════════════════════════════════');
+    console.log('🔀 toggleStock CALLED');
+    console.log('   product.id:', product.id);
+    console.log('   product.productId:', product.productId);
+    console.log('   product.inStock:', product.inStock, '(type:', typeof product.inStock, ')');
+    console.log('═══════════════════════════════════════════');
+    
     // CRITICAL: Ensure product.id is a valid number
     const productId = Number(product.id || product.productId);
     if (isNaN(productId) || productId <= 0) {
@@ -141,16 +160,32 @@ const AdminProducts = () => {
     }
     
     // Explicitly set the new stock value (inverse of current)
-    const newInStock = !product.inStock;
-    console.log('📤 toggleStock:', { productId, currentInStock: product.inStock, newInStock });
+    // CRITICAL: This must produce true or false, not undefined
+    const currentInStock = product.inStock === true;
+    const newInStock = !currentInStock;
     
+    console.log('📤 toggleStock updating:', { 
+      productId, 
+      currentInStock, 
+      newInStock,
+      payload: { inStock: newInStock }
+    });
+    
+    // CRITICAL: Pass object with explicit inStock key
     await updateProduct(productId, { inStock: newInStock });
   };
 
   const handlePriceUpdate = async (product, newPrice) => {
+    console.log('═══════════════════════════════════════════');
+    console.log('💰 handlePriceUpdate CALLED');
+    console.log('   product.id:', product.id);
+    console.log('   newPrice:', newPrice, '(type:', typeof newPrice, ')');
+    console.log('═══════════════════════════════════════════');
+    
     // CRITICAL: Validate price before sending
     const pricePerKg = parseInt(newPrice, 10);
     if (isNaN(pricePerKg) || pricePerKg <= 0) {
+      console.error('❌ Invalid price:', newPrice);
       setErrorMessage('Please enter a valid price (must be a positive number greater than 0)');
       setTimeout(() => setErrorMessage(''), 3000);
       return;
@@ -164,7 +199,11 @@ const AdminProducts = () => {
       return;
     }
     
-    console.log('📤 handlePriceUpdate:', { productId, pricePerKg });
+    console.log('📤 handlePriceUpdate updating:', { 
+      productId, 
+      pricePerKg,
+      payload: { pricePerKg }
+    });
     
     await updateProduct(productId, { pricePerKg });
   };
