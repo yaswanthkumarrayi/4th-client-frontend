@@ -23,17 +23,23 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching products from API...');
+      console.log('═══════════════════════════════════════');
+      console.log('🔄 FETCHING PRODUCTS FROM SERVER...');
       const data = await adminAPI.getProducts();
       
       if (data.success) {
-        console.log('✅ Products fetched:', data.products.length);
+        console.log('✅ Products received:', data.products.length);
+        // Log first 3 products for verification
+        data.products.slice(0, 3).forEach(p => {
+          console.log(`   📦 ${p.name}: ₹${p.pricePerKg}/kg, inStock=${p.inStock}, hasOverride=${p.hasOverride}`);
+        });
         setProducts(data.products);
         setErrorMessage('');
       } else {
         console.error('❌ Failed to fetch products:', data.message);
         setErrorMessage(data.message || 'Failed to fetch products');
       }
+      console.log('═══════════════════════════════════════');
     } catch (error) {
       console.error('❌ Failed to fetch products:', error);
       setErrorMessage('Failed to fetch products: ' + error.message);
@@ -47,23 +53,43 @@ const AdminProducts = () => {
       setSaving(productId);
       setErrorMessage('');
       
-      console.log('🔄 Updating product:', productId, updateData);
+      console.log('═══════════════════════════════════════');
+      console.log('🔄 UPDATE REQUEST');
+      console.log('   Product ID:', productId);
+      console.log('   Data:', JSON.stringify(updateData));
+      console.log('═══════════════════════════════════════');
       
       const result = await adminAPI.updateProduct(productId, updateData);
+      
+      console.log('═══════════════════════════════════════');
+      console.log('📥 SERVER RESPONSE:');
+      console.log('   Success:', result.success);
+      console.log('   Message:', result.message);
+      if (result.product) {
+        console.log('   Product ID:', result.product.id);
+        console.log('   Product Name:', result.product.name);
+        console.log('   New PricePerKg:', result.product.pricePerKg);
+        console.log('   New InStock:', result.product.inStock);
+      }
+      console.log('═══════════════════════════════════════');
       
       if (!result.success) {
         throw new Error(result.message || 'Update failed');
       }
       
-      console.log('✅ Product updated successfully:', result.product);
+      console.log('🔄 Refetching products from server...');
       
       // Refetch all products to ensure UI is in sync with database
       await fetchProducts();
       
+      console.log('✅ Refetch complete');
+      
       setSuccessMessage(`Product updated successfully!`);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('❌ Failed to update product:', error);
+      console.error('═══════════════════════════════════════');
+      console.error('❌ UPDATE FAILED:', error.message);
+      console.error('═══════════════════════════════════════');
       setErrorMessage('Failed to update: ' + error.message);
       setTimeout(() => setErrorMessage(''), 5000);
     } finally {

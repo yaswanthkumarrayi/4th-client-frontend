@@ -41,10 +41,16 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 
   try {
-    console.log(`🌐 ${config.method} ${path}`);
+    console.log(`🌐 ${config.method} ${url}`);
+    if (config.body) {
+      console.log('📤 Request body:', config.body);
+    }
     
     const response = await fetch(url, config);
     const data = await response.json();
+
+    console.log(`📥 Response status: ${response.status}`);
+    console.log(`📥 Response data:`, JSON.stringify(data).substring(0, 500));
 
     if (!response.ok) {
       const errorMessage = data.message || `HTTP ${response.status}: ${response.statusText}`;
