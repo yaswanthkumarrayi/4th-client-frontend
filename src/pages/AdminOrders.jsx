@@ -11,6 +11,12 @@ import {
   Package
 } from 'lucide-react';
 import { adminAPI } from '../services/adminAPI';
+import { 
+  ORDER_STATUS, 
+  ORDER_STATUS_LABELS, 
+  ORDER_STATUS_COLORS,
+  PAYMENT_STATUS_COLORS 
+} from '../data/orderStatus';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -40,7 +46,12 @@ const AdminOrders = () => {
   const updateStatus = async (orderId, status) => {
     try {
       setUpdating(true);
-      await adminAPI.updateOrderStatus(orderId, status);
+      const result = await adminAPI.updateOrderStatus(orderId, status);
+      if (!result.success) {
+        console.error('Status update failed:', result.message);
+        alert('Failed to update status: ' + result.message);
+        return;
+      }
       await fetchOrders();
       if (selectedOrder?.orderId === orderId) {
         const data = await adminAPI.getOrder(orderId);
@@ -48,6 +59,7 @@ const AdminOrders = () => {
       }
     } catch (error) {
       console.error('Failed to update status:', error);
+      alert('Failed to update status: ' + error.message);
     } finally {
       setUpdating(false);
     }
@@ -72,33 +84,24 @@ const AdminOrders = () => {
   };
 
   const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      processing: 'bg-purple-100 text-purple-700',
-      out_for_delivery: 'bg-orange-100 text-orange-700',
-      delivered: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-700';
+    return ORDER_STATUS_COLORS[status] || 'bg-gray-100 text-gray-700';
   };
 
   const getPaymentColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      paid: 'bg-green-100 text-green-700',
-      failed: 'bg-red-100 text-red-700'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-700';
+    return PAYMENT_STATUS_COLORS[status] || 'bg-gray-100 text-gray-700';
   };
 
+  // Status options for dropdown - use shared constants
   const statusOptions = [
-    { value: 'confirmed', label: 'Confirmed', icon: CheckCircle },
-    { value: 'processing', label: 'Processing', icon: Package },
-    { value: 'out_for_delivery', label: 'Out for Delivery', icon: Truck },
-    { value: 'delivered', label: 'Delivered', icon: CheckCircle },
-    { value: 'cancelled', label: 'Cancelled', icon: X }
+    { value: 'confirmed', label: ORDER_STATUS_LABELS.confirmed, icon: CheckCircle },
+    { value: 'processing', label: ORDER_STATUS_LABELS.processing, icon: Package },
+    { value: 'out_for_delivery', label: ORDER_STATUS_LABELS.out_for_delivery, icon: Truck },
+    { value: 'delivered', label: ORDER_STATUS_LABELS.delivered, icon: CheckCircle },
+    { value: 'cancelled', label: ORDER_STATUS_LABELS.cancelled, icon: X }
   ];
+
+  // Filter options - use shared constants
+  const filterOptions = ['all', ...ORDER_STATUS.filter(s => s !== 'cancelled')];
 
   return (
     <div className="space-y-6">
@@ -112,7 +115,7 @@ const AdminOrders = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
-        {['all', 'pending', 'confirmed', 'processing', 'out_for_delivery', 'delivered'].map((status) => (
+        {filterOptions.map((status) => (
           <button
             key={status}
             onClick={() => setFilter(status)}
@@ -122,7 +125,7 @@ const AdminOrders = () => {
                 : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            {status === 'all' ? 'All' : status.replace('_', ' ')}
+            {status === 'all' ? 'All' : ORDER_STATUS_LABELS[status] || status.replace('_', ' ')}
           </button>
         ))}
       </div>

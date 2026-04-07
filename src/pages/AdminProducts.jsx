@@ -4,7 +4,6 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  RefreshCw,
   RefreshCcw
 } from 'lucide-react';
 import { adminAPI } from '../services/adminAPI';
@@ -23,25 +22,17 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      console.log('═══════════════════════════════════════');
-      console.log('🔄 FETCHING PRODUCTS FROM SERVER...');
+      setErrorMessage('');
+      
       const data = await adminAPI.getProducts();
       
       if (data.success) {
-        console.log('✅ Products received:', data.products.length);
-        // Log first 3 products for verification
-        data.products.slice(0, 3).forEach(p => {
-          console.log(`   📦 ${p.name}: ₹${p.pricePerKg}/kg, inStock=${p.inStock}, hasOverride=${p.hasOverride}`);
-        });
         setProducts(data.products);
-        setErrorMessage('');
       } else {
-        console.error('❌ Failed to fetch products:', data.message);
         setErrorMessage(data.message || 'Failed to fetch products');
       }
-      console.log('═══════════════════════════════════════');
     } catch (error) {
-      console.error('❌ Failed to fetch products:', error);
+      console.error('Failed to fetch products:', error);
       setErrorMessage('Failed to fetch products: ' + error.message);
     } finally {
       setLoading(false);
@@ -53,43 +44,19 @@ const AdminProducts = () => {
       setSaving(productId);
       setErrorMessage('');
       
-      console.log('═══════════════════════════════════════');
-      console.log('🔄 UPDATE REQUEST');
-      console.log('   Product ID:', productId);
-      console.log('   Data:', JSON.stringify(updateData));
-      console.log('═══════════════════════════════════════');
-      
       const result = await adminAPI.updateProduct(productId, updateData);
-      
-      console.log('═══════════════════════════════════════');
-      console.log('📥 SERVER RESPONSE:');
-      console.log('   Success:', result.success);
-      console.log('   Message:', result.message);
-      if (result.product) {
-        console.log('   Product ID:', result.product.id);
-        console.log('   Product Name:', result.product.name);
-        console.log('   New PricePerKg:', result.product.pricePerKg);
-        console.log('   New InStock:', result.product.inStock);
-      }
-      console.log('═══════════════════════════════════════');
       
       if (!result.success) {
         throw new Error(result.message || 'Update failed');
       }
       
-      console.log('🔄 Refetching products from server...');
-      
-      // Refetch all products to ensure UI is in sync with database
+      // Refetch products to ensure UI is in sync with database
       await fetchProducts();
       
-      console.log('✅ Refetch complete');
-      
-      setSuccessMessage(`Product updated successfully!`);
+      setSuccessMessage('Product updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('═══════════════════════════════════════');
-      console.error('❌ UPDATE FAILED:', error.message);
-      console.error('═══════════════════════════════════════');
+      console.error('Update failed:', error);
       setErrorMessage('Failed to update: ' + error.message);
       setTimeout(() => setErrorMessage(''), 5000);
     } finally {
@@ -98,10 +65,7 @@ const AdminProducts = () => {
   };
 
   const toggleStock = async (product) => {
-    console.log('🔄 Toggling stock for:', product.name, 'Current:', product.inStock);
-    await updateProduct(product.id, {
-      inStock: !product.inStock
-    });
+    await updateProduct(product.id, { inStock: !product.inStock });
   };
 
   const handlePriceUpdate = async (product, newPrice) => {
@@ -112,10 +76,7 @@ const AdminProducts = () => {
       return;
     }
     
-    console.log('🔄 Updating price for:', product.name, 'New price:', pricePerKg);
-    await updateProduct(product.id, {
-      pricePerKg
-    });
+    await updateProduct(product.id, { pricePerKg });
   };
 
   const resetProduct = async (productId) => {
@@ -125,22 +86,18 @@ const AdminProducts = () => {
       setSaving(productId);
       setErrorMessage('');
       
-      console.log('🔄 Resetting product:', productId);
-      
       const result = await adminAPI.resetProduct(productId);
       
       if (!result.success) {
         throw new Error(result.message || 'Reset failed');
       }
       
-      console.log('✅ Product reset successfully');
-      
       await fetchProducts();
       
       setSuccessMessage('Product reset to default!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('❌ Failed to reset product:', error);
+      console.error('Failed to reset product:', error);
       setErrorMessage('Failed to reset: ' + error.message);
       setTimeout(() => setErrorMessage(''), 5000);
     } finally {
@@ -177,33 +134,14 @@ const AdminProducts = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 font-rubik">Manage Products</h1>
           <p className="text-gray-500 mt-1 font-montserrat text-sm">Update prices and stock availability</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={async () => {
-              try {
-                const result = await adminAPI.debugDatabase();
-                console.log('Database Debug:', result);
-                if (result.success) {
-                  setSuccessMessage(`DB Connected: ${result.database.name}, ${result.overrides.count} overrides stored`);
-                  setTimeout(() => setSuccessMessage(''), 5000);
-                }
-              } catch (err) {
-                setErrorMessage('Debug failed: ' + err.message);
-              }
-            }}
-            className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-montserrat text-sm"
-          >
-            🔍 Debug
-          </button>
-          <button
-            onClick={fetchProducts}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-montserrat text-sm"
-          >
-            <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
+        <button
+          onClick={fetchProducts}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-montserrat text-sm"
+        >
+          <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
 
       {/* Success Message */}
@@ -264,7 +202,7 @@ const ProductCard = ({ product, saving, onToggleStock, onPriceUpdate, onReset, f
   const [priceInput, setPriceInput] = useState(product.pricePerKg.toString());
   const [isEditing, setIsEditing] = useState(false);
 
-  // IMPORTANT: Update priceInput when product prop changes (after refetch)
+  // Update priceInput when product prop changes (after refetch)
   useEffect(() => {
     setPriceInput(product.pricePerKg.toString());
   }, [product.pricePerKg]);
@@ -281,7 +219,6 @@ const ProductCard = ({ product, saving, onToggleStock, onPriceUpdate, onReset, f
 
   return (
     <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition-colors">
-      {/* Mobile Layout */}
       <div className="space-y-4">
         {/* Product Header */}
         <div className="flex items-start gap-3">
@@ -294,9 +231,6 @@ const ProductCard = ({ product, saving, onToggleStock, onPriceUpdate, onReset, f
             </h3>
             <p className="text-gray-500 text-xs font-montserrat mt-0.5">
               ID: {product.id}
-              {product.hasOverride && (
-                <span className="ml-2 text-primary font-medium">• Modified</span>
-              )}
             </p>
           </div>
         </div>
@@ -307,16 +241,13 @@ const ProductCard = ({ product, saving, onToggleStock, onPriceUpdate, onReset, f
             <label className="text-sm font-medium text-gray-700 font-montserrat">
               Price per KG
             </label>
-            {!isEditing && product.hasOverride && (
-              <button
-                onClick={() => onReset(product.id)}
-                disabled={saving}
-                className="text-xs text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Reset
-              </button>
-            )}
+            <button
+              onClick={() => onReset(product.id)}
+              disabled={saving}
+              className="text-xs text-orange-600 hover:text-orange-700 font-medium"
+            >
+              Reset to default
+            </button>
           </div>
 
           {isEditing ? (

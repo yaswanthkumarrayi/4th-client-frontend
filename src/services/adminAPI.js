@@ -82,11 +82,6 @@ export const adminAPI = {
     });
   },
   
-  // Debug: Check database connection and overrides
-  debugDatabase: async () => {
-    return adminApiCall('/admin/debug/db');
-  },
-  
   // Coupons
   getCoupons: async () => {
     return adminApiCall('/admin/coupons');

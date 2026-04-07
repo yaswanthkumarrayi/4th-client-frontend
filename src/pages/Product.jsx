@@ -11,17 +11,16 @@ import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../components/CartContext';
 import { useProductConfig } from '../components/ProductConfigContext';
 import { useCheckout } from '../components/CheckoutContext';
-import { productCatalog, newArrivals } from '../data';
 
 const Product = () => {
   const { id } = useParams();
-  const { getProduct, loading: configLoading } = useProductConfig();
+  const { getProduct, getNewArrivals, loading: configLoading } = useProductConfig();
   const { openCheckout } = useCheckout();
   const imageSliderRef = useRef(null);
 
-  // Get merged product with overrides
-  const staticProduct = productCatalog.find((p) => p.id === parseInt(id));
-  const product = getProduct(parseInt(id)) || staticProduct;
+  // Get product from context (with images merged)
+  const product = getProduct(parseInt(id));
+  const newArrivals = getNewArrivals();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedWeight, setSelectedWeight] = useState(product?.weights?.[0] || '250gm');
@@ -34,7 +33,15 @@ const Product = () => {
     if (product?.weights?.[0]) {
       setSelectedWeight(product.weights[0]);
     }
-  }, [id]);
+  }, [id, product]);
+
+  if (configLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -61,13 +68,11 @@ const Product = () => {
   };
 
   const handleAddToCart = () => {
-    // Check stock status
     if (product.inStock === false) return;
     addToCart(product, selectedWeight, quantity);
   };
 
   const handleBuyNow = () => {
-    // Check stock status
     if (product.inStock === false) return;
     addToCart(product, selectedWeight, quantity);
     openCheckout();
@@ -183,11 +188,6 @@ const Product = () => {
                 <span className="font-rubik font-bold text-3xl text-gray-800">
                   ₹{currentPrice}
                 </span>
-                {product.originalPrice > currentPrice && (
-                  <span className="text-lg text-gray-400 line-through font-montserrat">
-                    ₹{product.originalPrice}
-                  </span>
-                )}
               </div>
 
               {/* Weight Options */}

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, User, ShoppingCart, LogOut, ChevronDown } from 'lucide-react';
-import { navLinks, productCatalog } from '../data';
+import { navLinks } from '../data';
 import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
+import { useProductConfig } from './ProductConfigContext';
 import logoImage from '../assets/images/samskruthi_pfp.jpg';
 
 const Navbar = () => {
@@ -25,12 +26,14 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { totalItems, openCart } = useCart();
   const { user, openAuthModal, logout } = useAuth();
+  const { getAllProducts } = useProductConfig();
 
-  // Search function
+  // Search function using products from context
   const searchProducts = (query) => {
     if (!query.trim()) return [];
     const lowerQuery = query.toLowerCase();
-    return productCatalog.filter(
+    const products = getAllProducts();
+    return products.filter(
       (product) =>
         product.name.toLowerCase().includes(lowerQuery) ||
         product.category.toLowerCase().includes(lowerQuery)

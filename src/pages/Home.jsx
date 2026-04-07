@@ -8,10 +8,16 @@ import WhatsAppButton from '../components/WhatsAppButton';
 import CartDrawer from '../components/CartDrawer';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../components/CartContext';
-import { categories, bestSellers, newArrivals } from '../data';
+import { useProductConfig } from '../components/ProductConfigContext';
+import { categories } from '../data';
 
 const Home = () => {
   const { isCartOpen, closeCart, cartItems, updateQuantity, removeItem } = useCart();
+  const { getBestSellers, getNewArrivals, loading } = useProductConfig();
+  
+  // Get products from API via context
+  const bestSellers = getBestSellers();
+  const newArrivals = getNewArrivals();
 
   return (
     <div className="min-h-screen">
@@ -48,7 +54,13 @@ const Home = () => {
             </h2>
 
             {/* Products Slider */}
-            <ProductSlider products={bestSellers} />
+            {loading ? (
+              <div className="flex items-center justify-center h-48">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <ProductSlider products={bestSellers} />
+            )}
           </div>
         </section>
 
@@ -61,7 +73,13 @@ const Home = () => {
             </h2>
 
             {/* Products Slider */}
-            <ProductSlider products={newArrivals} />
+            {loading ? (
+              <div className="flex items-center justify-center h-48">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <ProductSlider products={newArrivals} />
+            )}
           </div>
         </section>
 
