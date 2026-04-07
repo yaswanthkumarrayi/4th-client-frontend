@@ -40,11 +40,78 @@ const AdminProducts = () => {
   };
 
   const updateProduct = async (productId, updateData) => {
+    // CRITICAL: Multi-layer validation before sending to prevent errors
+    console.log('🔄 updateProduct called with:', { productId, updateData });
+    
+    // Layer 1: Validate updateData object
+    if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
+      console.error('❌ Invalid update data:', updateData);
+      setErrorMessage('Error: Invalid update data');
+      return;
+    }
+    
+    // Layer 2: Ensure productId is a valid number
+    const numericProductId = Number(productId);
+    if (isNaN(numericProductId) || numericProductId <= 0) {
+      console.error('❌ Invalid product ID:', productId);
+      setErrorMessage('Error: Invalid product ID');
+      return;
+    }
+    
+    // Layer 3: Build cleaned data with validation
+    const cleanedData = {};
+    
+    // pricePerKg - must be positive number
+    if (updateData.pricePerKg !== undefined && updateData.pricePerKg !== null && updateData.pricePerKg !== '') {
+      const price = Number(updateData.pricePerKg);
+      if (!isNaN(price) && price > 0) {
+        cleanedData.pricePerKg = price;
+      } else {
+        console.warn('⚠️ Invalid pricePerKg ignored:', updateData.pricePerKg);
+      }
+    }
+    
+    // inStock - boolean (MUST handle false correctly!)
+    if (updateData.inStock !== undefined && updateData.inStock !== null) {
+      // Explicitly handle boolean conversion
+      cleanedData.inStock = updateData.inStock === true || updateData.inStock === 'true';
+      console.log('📌 inStock will be:', cleanedData.inStock, '(input:', updateData.inStock, ')');
+    }
+    
+    // stockQuantity - number >= 0 or null
+    if (updateData.stockQuantity !== undefined) {
+      if (updateData.stockQuantity === null || updateData.stockQuantity === '') {
+        cleanedData.stockQuantity = null;
+      } else {
+        const qty = Number(updateData.stockQuantity);
+        if (!isNaN(qty) && qty >= 0) {
+          cleanedData.stockQuantity = qty;
+        }
+      }
+    }
+    
+    // isActive - boolean
+    if (updateData.isActive !== undefined && updateData.isActive !== null) {
+      cleanedData.isActive = updateData.isActive === true || updateData.isActive === 'true';
+    }
+    
+    // Layer 4: Check if we have any valid fields
+    if (Object.keys(cleanedData).length === 0) {
+      console.error('❌ No valid fields to update');
+      console.error('   Original data:', JSON.stringify(updateData));
+      setErrorMessage('Error: No valid fields to update. Please provide pricePerKg, inStock, or isActive.');
+      return;
+    }
+    
+    console.log('📤 Sending update:', { productId: numericProductId, cleanedData });
+    
     try {
-      setSaving(productId);
+      setSaving(numericProductId);
       setErrorMessage('');
       
-      const result = await adminAPI.updateProduct(productId, updateData);
+      const result = await adminAPI.updateProduct(numericProductId, cleanedData);
+      
+      console.log('📥 Product update response:', result);
       
       if (!result.success) {
         throw new Error(result.message || 'Update failed');
@@ -65,28 +132,59 @@ const AdminProducts = () => {
   };
 
   const toggleStock = async (product) => {
-    await updateProduct(product.id, { inStock: !product.inStock });
+    // CRITICAL: Ensure product.id is a valid number
+    const productId = Number(product.id || product.productId);
+    if (isNaN(productId) || productId <= 0) {
+      console.error('❌ toggleStock: Invalid product ID:', product);
+      setErrorMessage('Error: Invalid product ID');
+      return;
+    }
+    
+    // Explicitly set the new stock value (inverse of current)
+    const newInStock = !product.inStock;
+    console.log('📤 toggleStock:', { productId, currentInStock: product.inStock, newInStock });
+    
+    await updateProduct(productId, { inStock: newInStock });
   };
 
   const handlePriceUpdate = async (product, newPrice) => {
-    const pricePerKg = parseInt(newPrice);
-    if (isNaN(pricePerKg) || pricePerKg < 0) {
-      setErrorMessage('Please enter a valid price (must be a positive number)');
+    // CRITICAL: Validate price before sending
+    const pricePerKg = parseInt(newPrice, 10);
+    if (isNaN(pricePerKg) || pricePerKg <= 0) {
+      setErrorMessage('Please enter a valid price (must be a positive number greater than 0)');
       setTimeout(() => setErrorMessage(''), 3000);
       return;
     }
     
-    await updateProduct(product.id, { pricePerKg });
+    // Ensure product.id is a valid number
+    const productId = Number(product.id || product.productId);
+    if (isNaN(productId) || productId <= 0) {
+      console.error('❌ handlePriceUpdate: Invalid product ID:', product);
+      setErrorMessage('Error: Invalid product ID');
+      return;
+    }
+    
+    console.log('📤 handlePriceUpdate:', { productId, pricePerKg });
+    
+    await updateProduct(productId, { pricePerKg });
   };
 
   const resetProduct = async (productId) => {
+    // Validate productId
+    const numericProductId = Number(productId);
+    if (isNaN(numericProductId) || numericProductId <= 0) {
+      console.error('❌ resetProduct: Invalid product ID:', productId);
+      setErrorMessage('Error: Invalid product ID');
+      return;
+    }
+    
     if (!confirm('Reset this product to default values?')) return;
     
     try {
-      setSaving(productId);
+      setSaving(numericProductId);
       setErrorMessage('');
       
-      const result = await adminAPI.resetProduct(productId);
+      const result = await adminAPI.resetProduct(numericProductId);
       
       if (!result.success) {
         throw new Error(result.message || 'Reset failed');

@@ -44,18 +44,63 @@ const AdminOrders = () => {
   };
 
   const updateStatus = async (orderId, status) => {
+    // CRITICAL: Triple-check validation before sending to prevent "undefined" errors
+    console.log('🔄 updateStatus called with:', { orderId, status, statusType: typeof status });
+    
+    // Guard 1: Check if status exists and is a string
+    if (!status || typeof status !== 'string') {
+      console.error('❌ Invalid status value:', { status, type: typeof status });
+      alert('Error: Invalid status value. Please select a valid status.');
+      return;
+    }
+    
+    // Guard 2: Trim and normalize
+    const normalizedStatus = status.trim().toLowerCase();
+    
+    // Guard 3: Check for empty string
+    if (normalizedStatus === '') {
+      console.error('❌ Status is empty string');
+      alert('Error: Status cannot be empty.');
+      return;
+    }
+    
+    // Guard 4: Check for 'undefined' or 'null' as strings (common bug)
+    if (normalizedStatus === 'undefined' || normalizedStatus === 'null') {
+      console.error('❌ Status is string "undefined" or "null":', normalizedStatus);
+      alert('Error: Status cannot be "undefined" or "null".');
+      return;
+    }
+    
+    // Guard 5: Validate against allowed statuses
+    if (!ORDER_STATUS.includes(normalizedStatus)) {
+      console.error('❌ Status not in allowed list:', { status: normalizedStatus, allowed: ORDER_STATUS });
+      alert(`Error: "${status}" is not a valid status.\nValid values: ${ORDER_STATUS.join(', ')}`);
+      return;
+    }
+    
+    console.log('📤 Updating order status:', { orderId, status: normalizedStatus });
+    
     try {
       setUpdating(true);
-      const result = await adminAPI.updateOrderStatus(orderId, status);
+      const result = await adminAPI.updateOrderStatus(orderId, normalizedStatus);
+      
+      console.log('📥 Status update response:', result);
+      
       if (!result.success) {
         console.error('Status update failed:', result.message);
         alert('Failed to update status: ' + result.message);
         return;
       }
+      
+      // Refetch orders after successful update
       await fetchOrders();
+      
+      // Update selected order modal if open
       if (selectedOrder?.orderId === orderId) {
         const data = await adminAPI.getOrder(orderId);
-        setSelectedOrder(data.order);
+        if (data.success) {
+          setSelectedOrder(data.order);
+        }
       }
     } catch (error) {
       console.error('Failed to update status:', error);
