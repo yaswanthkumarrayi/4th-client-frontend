@@ -1,37 +1,5 @@
 // API Service for communicating with backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-// Helper to make API requests
-const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_URL}${endpoint}`;
-  
-  const config = {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  };
-
-  // Debug logging
-  console.log(`🌐 API Request: ${options.method || 'GET'} ${endpoint}`);
-
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error(`❌ API Error [${endpoint}]:`, data.message);
-      throw new Error(data.message || 'Request failed');
-    }
-    
-    console.log(`✅ API Success [${endpoint}]`);
-    return data;
-  } catch (error) {
-    console.error(`❌ API Error [${endpoint}]:`, error.message);
-    throw error;
-  }
-};
+import { apiRequest, authenticatedRequest } from './apiConfig.js';
 
 // Auth API calls
 export const authAPI = {
@@ -67,11 +35,8 @@ export const authAPI = {
     if (!token) {
       throw new Error('No token provided');
     }
-    return apiRequest('/auth/sync', {
+    return authenticatedRequest('/auth/sync', token, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
   },
 };
@@ -80,27 +45,15 @@ export const authAPI = {
 export const userAPI = {
   // Get user profile
   getProfile: async (token) => {
-    if (!token) {
-      throw new Error('No token provided');
-    }
-    return apiRequest('/user/profile', {
+    return authenticatedRequest('/user/profile', token, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
   },
 
   // Update user profile
   updateProfile: async (token, data) => {
-    if (!token) {
-      throw new Error('No token provided');
-    }
-    return apiRequest('/user/profile', {
+    return authenticatedRequest('/user/profile', token, {
       method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(data),
     });
   },
@@ -110,40 +63,22 @@ export const userAPI = {
 export const orderAPI = {
   // Get user's orders
   getMyOrders: async (token) => {
-    if (!token) {
-      throw new Error('No token provided');
-    }
-    return apiRequest('/orders/my-orders', {
+    return authenticatedRequest('/orders/my-orders', token, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
   },
 
   // Get order by ID
   getOrderById: async (token, orderId) => {
-    if (!token) {
-      throw new Error('No token provided');
-    }
-    return apiRequest(`/orders/${orderId}`, {
+    return authenticatedRequest(`/orders/my-orders/${orderId}`, token, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
   },
 
   // Delete order
   deleteOrder: async (token, orderId) => {
-    if (!token) {
-      throw new Error('No token provided');
-    }
-    return apiRequest(`/orders/my-orders/${orderId}`, {
+    return authenticatedRequest(`/orders/my-orders/${orderId}`, token, {
       method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
   },
 };

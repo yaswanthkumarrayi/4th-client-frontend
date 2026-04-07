@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { productCatalog as staticProducts, calculateWeightPrices } from '../data';
+import { API_URL } from '../services/apiConfig.js';
 
 const ProductConfigContext = createContext();
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const useProductConfig = () => {
   const context = useContext(ProductConfigContext);

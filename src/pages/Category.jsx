@@ -9,11 +9,12 @@ import WhatsAppButton from '../components/WhatsAppButton';
 import CartDrawer from '../components/CartDrawer';
 import FilterDrawer from '../components/FilterDrawer';
 import { useCart } from '../components/CartContext';
-import { productCatalog } from '../data';
+import { useProductConfig } from '../components/ProductConfigContext';
 
 const Category = () => {
   const { slug } = useParams();
   const { isCartOpen, closeCart, cartItems, updateQuantity, removeItem } = useCart();
+  const { getProductsByCategory } = useProductConfig();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
     availability: [],
@@ -26,10 +27,8 @@ const Category = () => {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
-  // Filter products by category first
-  const categoryProducts = productCatalog.filter(
-    (product) => product.category.toLowerCase() === categoryName.toLowerCase()
-  );
+  // Get products by category with overrides applied
+  const categoryProducts = getProductsByCategory(categoryName);
 
   // Apply filters
   const filteredProducts = useMemo(() => {
@@ -40,9 +39,9 @@ const Category = () => {
         return false;
       }
 
-      // Availability filter (all products are in stock for now)
+      // Availability filter
       if (filters.availability.length > 0) {
-        const isInStock = true; // Assuming all products are in stock
+        const isInStock = product.inStock !== false;
         if (filters.availability.includes('In Stock') && !isInStock) return false;
         if (filters.availability.includes('Out of Stock') && isInStock) return false;
       }

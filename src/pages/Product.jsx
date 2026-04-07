@@ -61,12 +61,14 @@ const Product = () => {
   };
 
   const handleAddToCart = () => {
-    if (!product.inStock) return;
+    // Check stock status
+    if (product.inStock === false) return;
     addToCart(product, selectedWeight, quantity);
   };
 
   const handleBuyNow = () => {
-    if (!product.inStock) return;
+    // Check stock status
+    if (product.inStock === false) return;
     addToCart(product, selectedWeight, quantity);
     openCheckout();
   };
@@ -198,8 +200,11 @@ const Product = () => {
                     <button
                       key={weight}
                       onClick={() => setSelectedWeight(weight)}
+                      disabled={product.inStock === false}
                       className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-200 font-montserrat ${
-                        selectedWeight === weight
+                        product.inStock === false
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : selectedWeight === weight
                           ? 'bg-primary text-white'
                           : 'bg-white text-gray-700 hover:bg-primary/10 shadow-soft'
                       }`}
@@ -216,10 +221,17 @@ const Product = () => {
                   Quantity
                 </label>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center bg-white rounded-xl shadow-soft overflow-hidden">
+                  <div className={`flex items-center bg-white rounded-xl shadow-soft overflow-hidden ${
+                    product.inStock === false ? 'opacity-50' : ''
+                  }`}>
                     <button
                       onClick={decreaseQuantity}
-                      className="p-3 hover:bg-gray-100 transition-colors"
+                      disabled={product.inStock === false}
+                      className={`p-3 transition-colors ${
+                        product.inStock === false 
+                          ? 'cursor-not-allowed' 
+                          : 'hover:bg-gray-100'
+                      }`}
                     >
                       <Minus className="w-5 h-5 text-gray-600" />
                     </button>
@@ -228,7 +240,12 @@ const Product = () => {
                     </span>
                     <button
                       onClick={increaseQuantity}
-                      className="p-3 hover:bg-gray-100 transition-colors"
+                      disabled={product.inStock === false}
+                      className={`p-3 transition-colors ${
+                        product.inStock === false 
+                          ? 'cursor-not-allowed' 
+                          : 'hover:bg-gray-100'
+                      }`}
                     >
                       <Plus className="w-5 h-5 text-gray-600" />
                     </button>

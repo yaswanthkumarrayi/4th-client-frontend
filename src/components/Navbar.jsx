@@ -110,7 +110,7 @@ const Navbar = () => {
 
   return (
     <header
-      className="fixed top-0 left-0 w-full z-50 bg-white shadow-md"
+      className="sticky top-0 left-0 w-full z-50 bg-white shadow-md transition-all duration-300"
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -267,6 +267,14 @@ const Navbar = () => {
                   >
                     <User className="w-4 h-4" />
                     My Account
+                  </Link>
+                  <Link
+                    to="/orders"
+                    onClick={() => setShowUserDropdown(false)}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors font-montserrat text-sm"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    My Orders
                   </Link>
                   <button
                     onClick={async () => {

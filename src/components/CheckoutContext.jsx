@@ -1,10 +1,10 @@
 import { createContext, useContext, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useCart } from './CartContext';
+import { API_URL } from '../services/apiConfig.js';
 
 const CheckoutContext = createContext();
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
 // Debug: Log Razorpay key status (not the actual key for security)
