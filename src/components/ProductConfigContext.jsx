@@ -30,7 +30,6 @@ export const ProductConfigProvider = ({ children }) => {
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('📦 Fetching products from API...');
       
       const response = await fetch(`${API_URL}/orders/products`);
       const data = await response.json();
@@ -40,14 +39,12 @@ export const ProductConfigProvider = ({ children }) => {
         const productsWithImages = data.products.map(product => mergeProductWithImages(product));
         setProducts(productsWithImages);
         setLastFetched(new Date());
-        console.log(`✅ Loaded ${productsWithImages.length} products`);
       } else {
         throw new Error(data.message || 'Failed to fetch products');
       }
       
       setError(null);
     } catch (err) {
-      console.error('❌ Failed to fetch products:', err);
       setError(err.message);
     } finally {
       setLoading(false);

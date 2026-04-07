@@ -111,7 +111,6 @@ const Account = () => {
           });
         }
       } catch (error) {
-        console.error('Failed to fetch profile:', error);
         setMessage({ type: 'error', text: 'Failed to load profile' });
       } finally {
         setLoading(false);

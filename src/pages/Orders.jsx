@@ -420,7 +420,6 @@ const Orders = () => {
           throw new Error(response.message || 'Failed to fetch orders');
         }
       } catch (err) {
-        console.error('Fetch orders error:', err);
         setError(err.message);
         setOrders([]);
       } finally {
@@ -470,7 +469,6 @@ const Orders = () => {
         throw new Error(response.message || 'Failed to delete order');
       }
     } catch (err) {
-      console.error('Delete order error:', err);
       alert(err.message || 'Failed to delete order');
     }
   };

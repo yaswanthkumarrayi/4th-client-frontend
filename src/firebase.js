@@ -14,7 +14,6 @@ const firebaseConfig = {
 
 // Validate Firebase config
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error('❌ Firebase configuration incomplete. Check your .env file.');
   throw new Error('Firebase configuration is missing required environment variables');
 }
 

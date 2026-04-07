@@ -43,7 +43,7 @@ const AdminCoupons = () => {
         setCoupons(data.coupons);
       }
     } catch (error) {
-      console.error('Failed to fetch coupons:', error);
+      // Failed to fetch coupons silently
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,6 @@ const AdminCoupons = () => {
       await fetchCoupons();
       closeModal();
     } catch (error) {
-      console.error('Failed to save coupon:', error);
       alert(error.message || 'Failed to save coupon');
     } finally {
       setSaving(false);
@@ -125,7 +124,7 @@ const AdminCoupons = () => {
       await adminAPI.toggleCoupon(id);
       await fetchCoupons();
     } catch (error) {
-      console.error('Failed to toggle coupon:', error);
+      // Failed to toggle coupon silently
     }
   };
 
@@ -136,7 +135,7 @@ const AdminCoupons = () => {
       await adminAPI.deleteCoupon(id);
       await fetchCoupons();
     } catch (error) {
-      console.error('Failed to delete coupon:', error);
+      // Failed to delete coupon silently
     }
   };
 

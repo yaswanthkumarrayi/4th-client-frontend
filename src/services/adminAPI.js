@@ -11,6 +11,9 @@ const adminApiCall = async (endpoint, options = {}) => {
   }
 };
 
+// Valid order statuses
+const VALID_ORDER_STATUS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+
 // Admin Auth API
 export const adminAPI = {
   // Login
@@ -58,41 +61,20 @@ export const adminAPI = {
   },
   
   updateOrderStatus: async (orderId, status, note = '') => {
-    // CRITICAL: Multi-layer validation to prevent "Invalid status: undefined" errors
-    
-    // Layer 1: Check if status exists
-    if (status === undefined || status === null) {
-      console.error('❌ adminAPI.updateOrderStatus: Status is undefined/null:', status);
-      return { success: false, message: 'Status is required and cannot be undefined or null' };
+    // Validate status
+    if (status === undefined || status === null || typeof status !== 'string') {
+      return { success: false, message: 'Valid status is required' };
     }
     
-    // Layer 2: Check if status is a string
-    if (typeof status !== 'string') {
-      console.error('❌ adminAPI.updateOrderStatus: Status is not a string:', { status, type: typeof status });
-      return { success: false, message: `Status must be a string, got ${typeof status}` };
-    }
-    
-    // Layer 3: Normalize and check for empty
     const normalizedStatus = status.trim().toLowerCase();
     
-    if (normalizedStatus === '') {
-      console.error('❌ adminAPI.updateOrderStatus: Status is empty string');
+    if (!normalizedStatus || normalizedStatus === 'undefined' || normalizedStatus === 'null') {
       return { success: false, message: 'Status cannot be empty' };
     }
     
-    // Layer 4: Check for 'undefined' or 'null' as strings
-    if (normalizedStatus === 'undefined' || normalizedStatus === 'null') {
-      console.error('❌ adminAPI.updateOrderStatus: Status is literal string "undefined"/"null":', status);
-      return { success: false, message: 'Status cannot be the string "undefined" or "null"' };
+    if (!VALID_ORDER_STATUS.includes(normalizedStatus)) {
+      return { success: false, message: `Invalid status. Must be one of: ${VALID_ORDER_STATUS.join(', ')}` };
     }
-    
-    // Layer 5: Log what we're sending
-    console.log('📤 adminAPI.updateOrderStatus:', { 
-      orderId, 
-      originalStatus: status,
-      normalizedStatus, 
-      note: note || '' 
-    });
     
     return adminApiCall(`/admin/orders/${orderId}/status`, {
       method: 'PUT',
@@ -106,34 +88,22 @@ export const adminAPI = {
   },
   
   updateProduct: async (productId, data) => {
-    // CRITICAL: Multi-layer validation to prevent "No valid fields" errors
-    
-    console.log('═══════════════════════════════════════════');
-    console.log('📦 adminAPI.updateProduct CALLED');
-    console.log('   productId:', productId, '(type:', typeof productId, ')');
-    console.log('   data:', JSON.stringify(data));
-    console.log('   data keys:', data ? Object.keys(data) : 'N/A');
-    console.log('═══════════════════════════════════════════');
-    
-    // Layer 1: Check productId
+    // Validate productId
     if (productId === undefined || productId === null) {
-      console.error('❌ adminAPI.updateProduct: productId is undefined/null');
       return { success: false, message: 'Product ID is required' };
     }
     
     const numericProductId = Number(productId);
     if (isNaN(numericProductId) || numericProductId <= 0) {
-      console.error('❌ adminAPI.updateProduct: Invalid productId:', productId);
       return { success: false, message: 'Product ID must be a positive number' };
     }
     
-    // Layer 2: Check data object
+    // Validate data object
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      console.error('❌ adminAPI.updateProduct: Data is not an object:', data);
       return { success: false, message: 'Update data must be an object' };
     }
     
-    // Layer 3: Build cleaned data with only valid fields
+    // Build cleaned data with only valid fields
     const cleanedData = {};
     
     // pricePerKg - must be a valid positive number
@@ -141,25 +111,17 @@ export const adminAPI = {
       const price = Number(data.pricePerKg);
       if (!isNaN(price) && price > 0) {
         cleanedData.pricePerKg = price;
-        console.log('📌 pricePerKg will be set to:', cleanedData.pricePerKg);
-      } else {
-        console.warn('⚠️ adminAPI.updateProduct: Invalid pricePerKg ignored:', data.pricePerKg);
       }
     }
     
-    // inStock - boolean (MUST handle false correctly!)
-    // CRITICAL: Check for explicit presence of inStock field, including false value
+    // inStock - boolean
     if ('inStock' in data) {
-      // Convert to boolean - handles true, false, 'true', 'false', 1, 0
-      const boolValue = data.inStock === true || data.inStock === 'true' || data.inStock === 1;
-      cleanedData.inStock = boolValue;
-      console.log('📌 inStock will be set to:', cleanedData.inStock, '(input was:', data.inStock, ', type:', typeof data.inStock, ')');
+      cleanedData.inStock = data.inStock === true || data.inStock === 'true' || data.inStock === 1;
     }
     
     // isActive - boolean
     if ('isActive' in data) {
       cleanedData.isActive = data.isActive === true || data.isActive === 'true' || data.isActive === 1;
-      console.log('📌 isActive will be set to:', cleanedData.isActive);
     }
     
     // stockQuantity - number >= 0 or null
@@ -172,45 +134,26 @@ export const adminAPI = {
           cleanedData.stockQuantity = qty;
         }
       }
-      console.log('📌 stockQuantity will be set to:', cleanedData.stockQuantity);
     }
     
     // name - non-empty string
     if (data.name !== undefined && data.name !== null && String(data.name).trim() !== '') {
       cleanedData.name = String(data.name).trim();
-      console.log('📌 name will be set to:', cleanedData.name);
     }
     
     // category - string
     if (data.category !== undefined && data.category !== null && data.category !== '') {
       cleanedData.category = data.category;
-      console.log('📌 category will be set to:', cleanedData.category);
     }
     
-    // Layer 4: Check if we have any valid fields to update
-    console.log('📋 cleanedData after processing:', JSON.stringify(cleanedData));
-    console.log('📋 cleanedData keys:', Object.keys(cleanedData));
-    
+    // Check if we have any valid fields to update
     if (Object.keys(cleanedData).length === 0) {
-      console.error('❌ adminAPI.updateProduct: No valid fields to update');
-      console.error('   Original data:', JSON.stringify(data));
-      console.error('   This error occurs when:');
-      console.error('   1. pricePerKg is 0, negative, or not a number');
-      console.error('   2. inStock is not explicitly set in the data object');
-      console.error('   3. All fields are undefined/null/empty');
-      return { success: false, message: 'No valid fields provided for update. Please provide pricePerKg, inStock, isActive, or stockQuantity.' };
+      return { success: false, message: 'No valid fields provided for update' };
     }
-    
-    // Layer 5: Log and send
-    const payload = JSON.stringify(cleanedData);
-    console.log('📤 SENDING TO BACKEND:');
-    console.log('   URL: /admin/products/' + numericProductId);
-    console.log('   Method: PUT');
-    console.log('   Body:', payload);
     
     return adminApiCall(`/admin/products/${numericProductId}`, {
       method: 'PUT',
-      body: payload
+      body: JSON.stringify(cleanedData)
     });
   },
   
@@ -254,7 +197,6 @@ export const adminAPI = {
 
 // Orders API (User-facing)
 export const ordersAPI = {
-  // Validate coupon
   validateCoupon: async (token, code, orderAmount, productIds) => {
     return authenticatedRequest('/orders/coupon/validate', token, {
       method: 'POST',
@@ -262,7 +204,6 @@ export const ordersAPI = {
     });
   },
   
-  // Create order (Razorpay)
   createOrder: async (token, items, couponCode, address) => {
     return authenticatedRequest('/orders/create-order', token, {
       method: 'POST',
@@ -270,7 +211,6 @@ export const ordersAPI = {
     });
   },
   
-  // Verify payment
   verifyPayment: async (token, paymentData) => {
     return authenticatedRequest('/orders/verify-payment', token, {
       method: 'POST',
@@ -278,14 +218,12 @@ export const ordersAPI = {
     });
   },
   
-  // Get my orders
   getMyOrders: async (token) => {
     return authenticatedRequest('/orders/my-orders', token, {
       method: 'GET'
     });
   },
   
-  // Get single order
   getOrder: async (token, orderId) => {
     return authenticatedRequest(`/orders/my-orders/${orderId}`, token, {
       method: 'GET'

@@ -37,19 +37,15 @@ const AdminOrders = () => {
         setOrders(data.orders);
       }
     } catch (error) {
-      console.error('Failed to fetch orders:', error);
+      // Failed to fetch orders silently
     } finally {
       setLoading(false);
     }
   };
 
   const updateStatus = async (orderId, status) => {
-    // CRITICAL: Triple-check validation before sending to prevent "undefined" errors
-    console.log('🔄 updateStatus called with:', { orderId, status, statusType: typeof status });
-    
     // Guard 1: Check if status exists and is a string
     if (!status || typeof status !== 'string') {
-      console.error('❌ Invalid status value:', { status, type: typeof status });
       alert('Error: Invalid status value. Please select a valid status.');
       return;
     }
@@ -59,35 +55,27 @@ const AdminOrders = () => {
     
     // Guard 3: Check for empty string
     if (normalizedStatus === '') {
-      console.error('❌ Status is empty string');
       alert('Error: Status cannot be empty.');
       return;
     }
     
-    // Guard 4: Check for 'undefined' or 'null' as strings (common bug)
+    // Guard 4: Check for 'undefined' or 'null' as strings
     if (normalizedStatus === 'undefined' || normalizedStatus === 'null') {
-      console.error('❌ Status is string "undefined" or "null":', normalizedStatus);
       alert('Error: Status cannot be "undefined" or "null".');
       return;
     }
     
     // Guard 5: Validate against allowed statuses
     if (!ORDER_STATUS.includes(normalizedStatus)) {
-      console.error('❌ Status not in allowed list:', { status: normalizedStatus, allowed: ORDER_STATUS });
       alert(`Error: "${status}" is not a valid status.\nValid values: ${ORDER_STATUS.join(', ')}`);
       return;
     }
-    
-    console.log('📤 Updating order status:', { orderId, status: normalizedStatus });
     
     try {
       setUpdating(true);
       const result = await adminAPI.updateOrderStatus(orderId, normalizedStatus);
       
-      console.log('📥 Status update response:', result);
-      
       if (!result.success) {
-        console.error('Status update failed:', result.message);
         alert('Failed to update status: ' + result.message);
         return;
       }
@@ -103,7 +91,6 @@ const AdminOrders = () => {
         }
       }
     } catch (error) {
-      console.error('Failed to update status:', error);
       alert('Failed to update status: ' + error.message);
     } finally {
       setUpdating(false);
@@ -148,27 +135,21 @@ const AdminOrders = () => {
   
   // Handler for status button clicks - ensures status is NEVER undefined
   const handleStatusClick = (orderId, status) => {
-    // CRITICAL: Extra safeguard to prevent undefined status
-    console.log('🔘 Status button clicked:', { orderId, status, type: typeof status });
-    
     // Guard 1: Check basic validity
     if (!status || typeof status !== 'string' || status.trim() === '') {
-      console.error('❌ handleStatusClick: Invalid status prevented:', { status, type: typeof status });
       alert('Error: Cannot update status - invalid value detected');
       return;
     }
     
-    // Guard 2: Check for string 'undefined' or 'null' (common bug)
+    // Guard 2: Check for string 'undefined' or 'null'
     const normalized = status.trim().toLowerCase();
     if (normalized === 'undefined' || normalized === 'null') {
-      console.error('❌ handleStatusClick: Status is string "undefined"/"null"');
       alert('Error: Invalid status value. Please refresh the page and try again.');
       return;
     }
     
     // Guard 3: Validate against allowed statuses
     if (!ORDER_STATUS.includes(normalized)) {
-      console.error('❌ handleStatusClick: Status not in allowed list:', { status: normalized, allowed: ORDER_STATUS });
       alert(`Error: "${status}" is not a valid status.\nAllowed: ${ORDER_STATUS.join(', ')}`);
       return;
     }
@@ -358,11 +339,9 @@ const AdminOrders = () => {
                     value={selectedOrder.orderStatus || 'pending'}
                     onChange={(e) => {
                       const newStatus = e.target.value;
-                      console.log('📝 Dropdown changed:', { newStatus, type: typeof newStatus, isEmpty: newStatus === '', isValid: ORDER_STATUS.includes(newStatus) });
                       
-                      // CRITICAL: Prevent empty/undefined values
+                      // Prevent empty/undefined values
                       if (!newStatus || newStatus === '' || newStatus === 'undefined' || newStatus === 'null') {
-                        console.error('❌ Dropdown: Invalid status value prevented:', newStatus);
                         alert('Error: Invalid status selected. Please choose a valid status.');
                         return;
                       }

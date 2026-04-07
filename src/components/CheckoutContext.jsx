@@ -7,9 +7,6 @@ const CheckoutContext = createContext();
 
 const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-// Debug: Log Razorpay key status (not the actual key for security)
-console.log('[Checkout] Razorpay Key configured:', !!RAZORPAY_KEY_ID);
-
 export const useCheckout = () => {
   const context = useContext(CheckoutContext);
   if (!context) {
@@ -142,14 +139,6 @@ export const CheckoutProvider = ({ children }) => {
 
       const data = await response.json();
       
-      // Debug: Log order response
-      console.log('[Checkout] Order response:', {
-        success: data.success,
-        orderId: data.razorpayOrder?.id,
-        amount: data.razorpayOrder?.amount,
-        currency: data.razorpayOrder?.currency
-      });
-
       if (!data.success) {
         throw new Error(data.message || 'Failed to create order');
       }
@@ -202,7 +191,6 @@ export const CheckoutProvider = ({ children }) => {
 
       return { success: true };
     } catch (err) {
-      console.error('Payment error:', err);
       setError(err.message);
       setLoading(false);
       return { success: false, message: err.message };
@@ -247,7 +235,6 @@ export const CheckoutProvider = ({ children }) => {
         throw new Error(data.message || 'Payment verification failed');
       }
     } catch (err) {
-      console.error('Verification error:', err);
       setError(err.message);
       return { success: false, message: err.message };
     } finally {

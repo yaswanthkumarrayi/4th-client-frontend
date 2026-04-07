@@ -11,12 +11,11 @@ const Footer = () => {
     { name: 'Snacks', href: '/snacks' },
   ];
 
-  const contactLinks = [
-    { name: 'Customer Support', href: '/support' },
-    { name: 'Terms & Conditions', href: '/terms' },
-    { name: 'Shipping Policy', href: '/shipping' },
-    { name: 'Refund and Return Policy', href: '/returns' },
-    { name: 'Privacy Policy', href: '/privacy' },
+  const policyLinks = [
+    { name: 'Terms & Conditions', href: '/terms-and-conditions.html' },
+    { name: 'Shipping Policy', href: '/shipping-policy.html' },
+    { name: 'Refund and Return Policy', href: '/refund-return-policy.html' },
+    { name: 'Privacy Policy', href: '/privacy-policy.html' },
   ];
 
   return (
@@ -49,20 +48,20 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Links */}
+          {/* Policy Links */}
           <div>
             <h3 className="font-rubik font-bold text-[22px] text-white mb-6">
-              Contact
+              Policies
             </h3>
             <ul className="space-y-3">
-              {contactLinks.map((link) => (
+              {policyLinks.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    to={link.href}
+                  <a
+                    href={link.href}
                     className="text-white/80 hover:text-white transition-colors duration-200 font-montserrat text-sm"
                   >
                     {link.name}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>

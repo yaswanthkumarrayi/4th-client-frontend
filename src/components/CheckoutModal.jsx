@@ -60,7 +60,7 @@ const CheckoutModal = () => {
           });
         }
       } catch (err) {
-        console.error('Failed to load profile:', err);
+        // Failed to load profile silently
       }
     };
 

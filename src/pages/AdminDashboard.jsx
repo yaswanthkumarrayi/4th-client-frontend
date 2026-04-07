@@ -27,7 +27,7 @@ const AdminDashboard = () => {
         setRecentOrders(data.recentOrders);
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
+      // Failed to fetch dashboard silently
     } finally {
       setLoading(false);
     }
