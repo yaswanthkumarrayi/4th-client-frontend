@@ -132,8 +132,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, updateQuantity, removeItem }) 
 
         {/* Trust Badge */}
         {cartItems.length > 0 && (
-          <div className="px-4 sm:px-6 py-3 bg-gray-50 text-center">
-            <p className="text-sm text-gray-600 font-montserrat">Trusted By 10k+ Customers</p>
+          <div className="px-4 sm:px-6 py-3 bg-yellow-100 text-center flex items-center justify-center">
+            <p className="text-sm text-gray-800 font-montserrat font-medium">✨ Trusted By 10k+ Customers</p>
           </div>
         )}
 

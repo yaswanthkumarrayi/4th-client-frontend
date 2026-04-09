@@ -186,6 +186,14 @@ const CheckoutModal = () => {
                   </button>
                 </div>
               )}
+              {appliedCoupon && (
+                <div className="mt-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-400 rounded-xl animate-in fade-in slide-in-from-top-2 duration-500 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">✓</span>
+                    <p className="text-green-700 text-sm font-montserrat font-medium">Coupon applied successfully</p>
+                  </div>
+                </div>
+              )}
               {couponError && (
                 <p className="text-red-500 text-xs mt-1 font-montserrat">{couponError}</p>
               )}

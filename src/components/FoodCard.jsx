@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Check } from 'lucide-react';
 import { useCart } from './CartContext';
 import { useProductConfig } from './ProductConfigContext';
+import OptimizedImage from './OptimizedImage';
 
 const FoodCard = ({ product: baseProduct }) => {
   const [isAdded, setIsAdded] = useState(false);
@@ -38,12 +40,17 @@ const FoodCard = ({ product: baseProduct }) => {
     >
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden">
-        <img
+        <OptimizedImage
           src={product.image}
           alt={product.name}
-          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+          width={400}
+          height={400}
+          className={`transition-all duration-500 group-hover:scale-105 ${
             isOutOfStock ? 'opacity-60 grayscale-[30%]' : ''
           }`}
+          objectFit="cover"
+          blur={true}
+          priority={false}
         />
 
         {/* Out of Stock Overlay Badge */}
@@ -112,4 +119,4 @@ const FoodCard = ({ product: baseProduct }) => {
   );
 };
 
-export default FoodCard;
+export default React.memo(FoodCard);

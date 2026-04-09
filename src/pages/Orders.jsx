@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../components/AuthContext';
 import { orderAPI } from '../services/api';
 import Navbar from '../components/Navbar';
@@ -506,9 +506,10 @@ const Orders = () => {
             <div className="mb-6 flex items-center gap-3">
               <button
                 onClick={() => navigate(-1)}
-                className="text-gray-600 hover:text-gray-800 transition-colors"
+                className="flex items-center gap-2 text-primary hover:text-primary-dark transition-colors font-montserrat"
               >
-                <span className="text-2xl font-bold">&lt;</span>
+                <ArrowLeft className="w-5 h-5" />
+                <span className="text-sm font-medium">Back</span>
               </button>
               <h1 className="text-2xl font-bold text-gray-800 font-rubik">
                 Your Orders

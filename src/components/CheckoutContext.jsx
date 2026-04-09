@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useCart } from './CartContext';
+import { useProductConfig } from './ProductConfigContext';
 import { API_URL } from '../services/apiConfig.js';
 
 const CheckoutContext = createContext();
@@ -18,6 +19,7 @@ export const useCheckout = () => {
 export const CheckoutProvider = ({ children }) => {
   const { user, getToken, openAuthModal } = useAuth();
   const { cartItems, clearCart, subtotal } = useCart();
+  const { getProduct } = useProductConfig();
   
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,7 +92,7 @@ export const CheckoutProvider = ({ children }) => {
     setError(null);
   };
 
-  // Initiate payment
+  // Initiate payment using new payment routes
   const initiatePayment = async (address) => {
     if (!user) {
       openAuthModal();
@@ -114,17 +116,30 @@ export const CheckoutProvider = ({ children }) => {
         throw new Error('Authentication failed');
       }
 
-      // Prepare cart items for backend
-      const items = cartItems.map(item => ({
-        productId: item.id,
-        name: item.name,
-        weight: item.weight,
-        quantity: item.quantity,
-        image: item.image || '' // Include image for order display
-      }));
+      // Prepare cart items with COMPLETE product details for order storage
+      const items = cartItems.map(item => {
+        // Get full product info from product config
+        const product = getProduct ? getProduct(item.id) : null;
+        
+        return {
+          productId: item.id,
+          name: item.name,
+          category: product?.category || item.category || '',
+          image: item.image || product?.images?.[0] || '',
+          weight: item.weight,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity
+        };
+      });
 
-      // Create order on backend
-      const response = await fetch(`${API_URL}/orders/create-order`, {
+      // Calculate totals
+      const orderSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+      const orderDeliveryCharge = orderSubtotal >= 500 ? 0 : 50;
+      const orderTotal = orderSubtotal - discount + orderDeliveryCharge;
+
+      // Create payment order on new /api/payment route
+      const response = await fetch(`${API_URL}/payment/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,8 +147,20 @@ export const CheckoutProvider = ({ children }) => {
         },
         body: JSON.stringify({
           items,
+          customer: {
+            name: address.name,
+            email: user.email,
+            mobile: address.mobile,
+            address: address.address,
+            state: address.state || '',
+            country: address.country || 'India',
+            pincode: address.pincode
+          },
+          subtotal: orderSubtotal,
+          discount: discount,
           couponCode: appliedCoupon?.code || null,
-          address
+          deliveryCharge: orderDeliveryCharge,
+          totalAmount: orderTotal
         })
       });
 
@@ -144,7 +171,7 @@ export const CheckoutProvider = ({ children }) => {
       }
 
       // Validate order data
-      if (!data.razorpayOrder?.id) {
+      if (!data.order?.id) {
         throw new Error('Invalid order response: missing order ID');
       }
 
@@ -158,14 +185,14 @@ export const CheckoutProvider = ({ children }) => {
         throw new Error('Razorpay script not loaded. Please refresh the page.');
       }
 
-      // Open Razorpay checkout
+      // Open Razorpay checkout with branded theme
       const options = {
         key: RAZORPAY_KEY_ID,
-        amount: data.razorpayOrder.amount,
-        currency: data.razorpayOrder.currency,
+        amount: data.order.amount,
+        currency: data.order.currency,
         name: 'Samskruthi Foods',
-        description: 'Order Payment',
-        order_id: data.razorpayOrder.id,
+        description: `Order #${data.order.orderId}`,
+        order_id: data.order.id,
         handler: async function(response) {
           // Verify payment on backend
           await verifyPayment(response, data.order.orderId, token);
@@ -175,18 +202,27 @@ export const CheckoutProvider = ({ children }) => {
           email: user.email,
           contact: address.mobile
         },
+        notes: {
+          orderId: data.order.orderId
+        },
         theme: {
-          color: '#C17A56'
+          color: '#800000' // Maroon brand color
         },
         modal: {
           ondismiss: function() {
             setLoading(false);
             setError('Payment cancelled');
-          }
+          },
+          confirm_close: true,
+          escape: false
         }
       };
 
       const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', function (response) {
+        setError(`Payment failed: ${response.error.description}`);
+        setLoading(false);
+      });
       razorpay.open();
 
       return { success: true };
@@ -197,10 +233,10 @@ export const CheckoutProvider = ({ children }) => {
     }
   };
 
-  // Verify payment
+  // Verify payment using new payment routes
   const verifyPayment = async (razorpayResponse, orderId, token) => {
     try {
-      const response = await fetch(`${API_URL}/orders/verify-payment`, {
+      const response = await fetch(`${API_URL}/payment/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -209,8 +245,7 @@ export const CheckoutProvider = ({ children }) => {
         body: JSON.stringify({
           razorpay_order_id: razorpayResponse.razorpay_order_id,
           razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-          razorpay_signature: razorpayResponse.razorpay_signature,
-          orderId
+          razorpay_signature: razorpayResponse.razorpay_signature
         })
       });
 

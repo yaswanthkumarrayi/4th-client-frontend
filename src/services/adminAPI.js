@@ -12,7 +12,7 @@ const adminApiCall = async (endpoint, options = {}) => {
 };
 
 // Valid order statuses
-const VALID_ORDER_STATUS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+const VALID_ORDER_STATUS = ['pending', 'confirmed', 'processing', 'out_for_delivery', 'delivered', 'cancelled'];
 
 // Admin Auth API
 export const adminAPI = {

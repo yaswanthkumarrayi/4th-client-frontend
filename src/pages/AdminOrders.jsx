@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { adminAPI } from '../services/adminAPI';
 import { 
-  ORDER_STATUS, 
+  ORDER_STATUS,
+  ADMIN_WORKFLOW_STATUS,
   ORDER_STATUS_LABELS, 
   ORDER_STATUS_COLORS,
   PAYMENT_STATUS_COLORS 
@@ -123,14 +124,11 @@ const AdminOrders = () => {
     return PAYMENT_STATUS_COLORS[status] || 'bg-gray-100 text-gray-700';
   };
 
-  // Status options for dropdown - use shared constants
-  // CRITICAL: Each option MUST have a valid string value - never undefined
+  // Status options for admin workflow - simplified 3-step process
   const statusOptions = [
-    { value: 'confirmed', label: ORDER_STATUS_LABELS.confirmed || 'Confirmed', icon: CheckCircle },
-    { value: 'processing', label: ORDER_STATUS_LABELS.processing || 'Processing', icon: Package },
-    { value: 'out_for_delivery', label: ORDER_STATUS_LABELS.out_for_delivery || 'Out for Delivery', icon: Truck },
-    { value: 'delivered', label: ORDER_STATUS_LABELS.delivered || 'Delivered', icon: CheckCircle },
-    { value: 'cancelled', label: ORDER_STATUS_LABELS.cancelled || 'Cancelled', icon: X }
+    { value: 'processing', label: 'Processing', icon: Package },
+    { value: 'out_for_delivery', label: 'Out for Delivery', icon: Truck },
+    { value: 'delivered', label: 'Delivered', icon: CheckCircle }
   ];
   
   // Handler for status button clicks - ensures status is NEVER undefined
@@ -328,59 +326,147 @@ const AdminOrders = () => {
                 </div>
               </div>
 
-              {/* Update Status */}
+              {/* Email Tracking */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3 font-montserrat">Update Status</h3>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3 font-montserrat">Email Notifications</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-montserrat ${
+                    selectedOrder.emailsSent?.paymentConfirmation 
+                      ? 'bg-green-50 text-green-700' 
+                      : 'bg-gray-50 text-gray-400'
+                  }`}>
+                    {selectedOrder.emailsSent?.paymentConfirmation ? '✅' : '⏳'} Payment Confirmation
+                  </div>
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-montserrat ${
+                    selectedOrder.emailsSent?.orderReceived 
+                      ? 'bg-green-50 text-green-700' 
+                      : 'bg-gray-50 text-gray-400'
+                  }`}>
+                    {selectedOrder.emailsSent?.orderReceived ? '✅' : '⏳'} Order Received
+                  </div>
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-montserrat ${
+                    selectedOrder.emailsSent?.outForDelivery 
+                      ? 'bg-green-50 text-green-700' 
+                      : 'bg-gray-50 text-gray-400'
+                  }`}>
+                    {selectedOrder.emailsSent?.outForDelivery ? '✅' : '⏳'} Out for Delivery
+                  </div>
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-montserrat ${
+                    selectedOrder.emailsSent?.delivered 
+                      ? 'bg-green-50 text-green-700' 
+                      : 'bg-gray-50 text-gray-400'
+                  }`}>
+                    {selectedOrder.emailsSent?.delivered ? '✅' : '⏳'} Delivered
+                  </div>
+                </div>
+              </div>
+
+              {/* Update Status - Clean 3-Step Progress */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4 font-montserrat">Order Progress</h3>
                 
-                {/* Dropdown Alternative (more reliable) */}
-                <div className="mb-4">
-                  <select
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg font-montserrat text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={selectedOrder.orderStatus || 'pending'}
-                    onChange={(e) => {
-                      const newStatus = e.target.value;
+                {/* Mobile-Friendly 3-Step Progress Indicator */}
+                <div className="mb-6">
+                  {/* Progress Steps */}
+                  <div className="relative flex items-start justify-between mb-8">
+                    {/* Connecting Line Background */}
+                    <div className="absolute top-6 sm:top-7 left-0 right-0 h-0.5 bg-gray-200" style={{ zIndex: 0 }} />
+                    
+                    {statusOptions.map((status, index) => {
+                      const Icon = status.icon;
+                      const isActive = selectedOrder.orderStatus === status.value;
+                      const isCompleted = 
+                        (status.value === 'processing' && ['processing', 'out_for_delivery', 'delivered'].includes(selectedOrder.orderStatus)) ||
+                        (status.value === 'out_for_delivery' && ['out_for_delivery', 'delivered'].includes(selectedOrder.orderStatus)) ||
+                        (status.value === 'delivered' && selectedOrder.orderStatus === 'delivered');
+                      const isPending = !isCompleted && !isActive;
                       
-                      // Prevent empty/undefined values
-                      if (!newStatus || newStatus === '' || newStatus === 'undefined' || newStatus === 'null') {
-                        alert('Error: Invalid status selected. Please choose a valid status.');
-                        return;
-                      }
-                      
-                      // Only update if status actually changed
-                      if (newStatus !== selectedOrder.orderStatus) {
-                        handleStatusClick(selectedOrder.orderId, newStatus);
-                      }
-                    }}
-                    disabled={updating}
-                  >
-                    {/* Remove disabled empty option that could cause issues */}
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="processing">Processing</option>
-                    <option value="out_for_delivery">Out for Delivery</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                      return (
+                        <div key={status.value} className="flex flex-col items-center flex-1 relative" style={{ zIndex: 1 }}>
+                          {/* Step Circle */}
+                          <div className={`
+                            w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center
+                            transition-all duration-300 mb-2
+                            ${isCompleted ? 'bg-green-500 text-white' : ''}
+                            ${isActive ? 'bg-primary text-white ring-4 ring-primary/20' : ''}
+                            ${isPending ? 'bg-gray-200 text-gray-400' : ''}
+                          `}>
+                            <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                          </div>
+                          
+                          {/* Step Label */}
+                          <p className={`
+                            text-xs sm:text-sm font-medium text-center font-montserrat max-w-[80px]
+                            ${isCompleted || isActive ? 'text-gray-800' : 'text-gray-400'}
+                          `}>
+                            {status.label}
+                          </p>
+                          
+                          {/* Active Progress Line Segment */}
+                          {index < statusOptions.length - 1 && isCompleted && (
+                            <div 
+                              className="absolute top-6 sm:top-7 h-0.5 bg-green-500 transition-all duration-300"
+                              style={{
+                                left: '50%',
+                                width: index === 0 ? 'calc(50% + 50%)' : '100%',
+                                zIndex: 0
+                              }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 
-                {/* Quick Status Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  {statusOptions.map(({ value, label, icon: Icon }) => (
+                {/* Status Update Buttons */}
+                <div className="space-y-2">
+                  {statusOptions.map(({ value, label, icon: Icon }) => {
+                    const isCurrentStatus = selectedOrder.orderStatus === value;
+                    
+                    return (
+                      <button
+                        key={value}
+                        onClick={() => handleStatusClick(selectedOrder.orderId, value)}
+                        disabled={updating || isCurrentStatus}
+                        className={`
+                          w-full flex items-center justify-between px-4 py-3 rounded-xl
+                          text-sm font-medium font-montserrat transition-all duration-200
+                          ${isCurrentStatus 
+                            ? 'bg-primary text-white shadow-lg shadow-primary/30' 
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                          }
+                          disabled:opacity-50 disabled:cursor-not-allowed
+                        `}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className={`w-5 h-5 ${isCurrentStatus ? 'text-white' : 'text-gray-500'}`} />
+                          <span>{label}</span>
+                        </div>
+                        {isCurrentStatus && (
+                          <span className="text-xs bg-white/20 px-2 py-1 rounded-full">Current</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                {/* Cancel Option (separated) */}
+                {selectedOrder.orderStatus !== 'delivered' && selectedOrder.orderStatus !== 'cancelled' && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
                     <button
-                      key={value}
-                      onClick={() => handleStatusClick(selectedOrder.orderId, value)}
-                      disabled={updating || selectedOrder.orderStatus === value}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium font-montserrat transition-colors ${
-                        selectedOrder.orderStatus === value
-                          ? 'bg-primary text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      } disabled:opacity-50`}
+                      onClick={() => {
+                        if (confirm('Are you sure you want to cancel this order?')) {
+                          handleStatusClick(selectedOrder.orderId, 'cancelled');
+                        }
+                      }}
+                      disabled={updating}
+                      className="w-full px-4 py-2 rounded-lg text-sm font-medium font-montserrat bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
                     >
-                      <Icon className="w-4 h-4" />
-                      {label}
+                      Cancel Order
                     </button>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

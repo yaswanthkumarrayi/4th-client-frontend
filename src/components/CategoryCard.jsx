@@ -1,5 +1,7 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import OptimizedImage from './OptimizedImage';
 
 const CategoryCard = ({ category, isCenter = false }) => {
   return (
@@ -16,10 +18,15 @@ const CategoryCard = ({ category, isCenter = false }) => {
         isCenter ? 'shadow-lg' : ''
       }`}>
         {category.image ? (
-          <img
+          <OptimizedImage
             src={category.image}
             alt={category.name}
-            className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+            width={320}
+            height={320}
+            className="p-2 transition-transform duration-500 group-hover:scale-105"
+            objectFit="contain"
+            blur={true}
+            priority={false}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
@@ -41,4 +48,4 @@ const CategoryCard = ({ category, isCenter = false }) => {
   );
 };
 
-export default CategoryCard;
+export default React.memo(CategoryCard);

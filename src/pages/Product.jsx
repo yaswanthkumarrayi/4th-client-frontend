@@ -11,6 +11,7 @@ import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../components/CartContext';
 import { useProductConfig } from '../components/ProductConfigContext';
 import { useCheckout } from '../components/CheckoutContext';
+import OptimizedImage from '../components/OptimizedImage';
 
 const Product = () => {
   const { id } = useParams();
@@ -126,10 +127,15 @@ const Product = () => {
                       className="flex-shrink-0 w-full aspect-square snap-center"
                     >
                       <div className="w-full h-full bg-white shadow-soft rounded-2xl lg:rounded-3xl overflow-hidden">
-                        <img
+                        <OptimizedImage
                           src={img}
                           alt={`${product.name} ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          width={600}
+                          height={600}
+                          className=""
+                          objectFit="cover"
+                          priority={index === 0} // First image loads immediately
+                          blur={true}
                         />
                       </div>
                     </div>
