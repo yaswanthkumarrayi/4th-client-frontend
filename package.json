@@ -295,6 +295,7 @@
     "yocto-queue": "^0.1.0"
   },
   "devDependencies": {
+    "terser": "^5.46.1",
     "vite-plugin-compression2": "^2.5.3",
     "workbox-window": "^7.4.0"
   },

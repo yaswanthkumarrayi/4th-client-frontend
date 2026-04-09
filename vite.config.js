@@ -28,8 +28,7 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           // UI components
           'ui-vendor': ['lucide-react'],
-          // Firebase
-          'firebase-vendor': ['firebase'],
+          // ✅ REMOVED: Firebase from manualChunks - Vite handles it automatically
         },
         // Asset file naming for cache busting
         assetFileNames: (assetInfo) => {
@@ -80,8 +79,15 @@ export default defineConfig({
     port: 3000,
   },
   
-  // Optimizations for dependencies
+  // ✅ UPDATED: Optimizations for dependencies - include Firebase modules
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'lucide-react',
+      'firebase/app',
+      'firebase/auth',
+    ],
   },
 })
