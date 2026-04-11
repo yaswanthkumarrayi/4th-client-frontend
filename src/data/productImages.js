@@ -13,45 +13,45 @@ import snacksImg from '../assets/images/Snacks.png';
 import sweetsImg from '../assets/images/Sweets.png';
 
 // Veg Pickles Images
-import vegPickleImg1 from '../assets/images/VegPickles/Avakaya1.png';
-import vegPickleImg2 from '../assets/images/VegPickles/Avakaya2.png';
-import gongura1 from '../assets/images/VegPickles/Gongura1.png';
-import gongura2 from '../assets/images/VegPickles/Gongura2.png';
-import gingerPickle from '../assets/images/VegPickles/GingerPickle.png';
-import lemonPickle from '../assets/images/VegPickles/LemonPickle.png';
-import redChilliPickle from '../assets/images/VegPickles/RedChilliPickle.png';
-import usirikayaPickle from '../assets/images/VegPickles/UsirikayaPickle.png';
+const vegPickleImg1 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943744/Avakaya1_cxypxn.png';
+const vegPickleImg2 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943744/Avakaya2_cpllas.png';
+const gongura1 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943744/Gongura1_v8bkpy.png';
+const gongura2 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943744/Gongura2_nzzzsf.png';
+const gingerPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943744/GingerPickle_otnidn.png';
+const lemonPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943745/LemonPickle_azfpu9.png';
+const redChilliPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943746/RedChilliPickle_oqnlqr.png';
+const usirikayaPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943747/UsirikayaPickle_sjfuaq.png';
 
 // Non Veg Pickles Images
-import nonVegPickleImg1 from '../assets/images/NonVegPickles/Chicken1.png';
-import nonVegPickleImg2 from '../assets/images/NonVegPickles/Chicken2.png';
-import prawn1 from '../assets/images/NonVegPickles/Prawn1.png';
-import prawn2 from '../assets/images/NonVegPickles/Prawn2.png';
-import muttonPickle from '../assets/images/NonVegPickles/MuttonPickle.png';
+const nonVegPickleImg1 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944028/Chicken1_fzg80t.png';
+const nonVegPickleImg2 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944029/Chicken2_rdjf3x.png';
+const prawn1 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944029/Prawn1_zc3db0.png';
+const prawn2 = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944029/Prawn2_n09s8c.png';
+const muttonPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944029/MuttonPickle_eswc8a.png';
 
 // Podis Images
-import kandiPodi from '../assets/images/Podis/KandiPodi.png';
-import karvepakuPodi from '../assets/images/Podis/KarvepakuPodi.png';
-import kobbariPodi from '../assets/images/Podis/KobbariPodi.png';
+const kandiPodi = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944031/KandiPodi_mhdch9.png';
+const karvepakuPodi = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944031/KarvepakuPodi_uyzewm.png';
+const kobbariPodi = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944031/KobbariPodi_md00jo.png';
 
 // Snacks Images
-import mixtureImg from '../assets/images/Snacks/Mixture.png';
-import murukuluImg from '../assets/images/Snacks/Murukulu.png';
-import ribbonPakodiImg from '../assets/images/Snacks/RibbonPakodi.png';
+const mixtureImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944168/Mixture_tx6gn3.png';
+const murukuluImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944168/Murukulu_ft78ro.png';
+const ribbonPakodiImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944169/RibbonPakodi_lycdhz.png';
 
 // Sweets Images
-import ariseluImg from '../assets/images/Sweets/Ariselu.png';
-import bandharuLadduImg from '../assets/images/Sweets/BandharuLaddu.png';
-import boondhiAchuImg from '../assets/images/Sweets/Boondhiachu.png';
-import boondhiLadduImg from '../assets/images/Sweets/BoondhiLaddu.png';
-import booreluImg from '../assets/images/Sweets/Boorelu.png';
-import cashewAchuImg from '../assets/images/Sweets/CashewAchu.png';
-import kajjiKayaluImg from '../assets/images/Sweets/KajjiKayalu.png';
-import mysorepakImg from '../assets/images/Sweets/MysoreaPak.png';
-import nuvvundaluImg from '../assets/images/Sweets/nuvvundalu.png';
-import palliUndaluImg from '../assets/images/Sweets/PalliUndalu.png';
-import sannaBoondhiLadduImg from '../assets/images/Sweets/SannaBoondhiLaddu.png';
-import sunnundaImg from '../assets/images/Sweets/Sunnunda.png';
+const ariseluImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775942494/Ariselu_utseja.png';
+const bandharuLadduImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775942495/BandharuLaddu_l0g92a.png';
+const boondhiAchuImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775942494/Boondhiachu_pad4cx.png';
+const boondhiLadduImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775942494/BoondhiLaddu_w7icu3.png';
+const booreluImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775941659/Boorelu_xx6khm.png';
+const cashewAchuImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943147/CashewAchu_l4bzb7.png';
+const kajjiKayaluImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775942495/KajjiKayalu_bhntbw.png';
+const mysorepakImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943146/MysoreaPak_iqqcgj.png';
+const nuvvundaluImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943147/nuvvundalu_dkytub.png';
+const palliUndaluImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775942495/PalliUndalu_w9l3g1.png';
+const sannaBoondhiLadduImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943147/SannaBoondhiLaddu_bifirb.png';
+const sunnundaImg = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943147/Sunnunda_ws55x3.png';
 
 /**
  * Product Images Map

@@ -7,16 +7,19 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 // Import images from src/assets
-import AvakayaPickle from '../assets/images/VegPickles/Avakaya1.png';
-import LemonPickle from '../assets/images/VegPickles/LemonPickle.png';
-import GonguraPickle from '../assets/images/VegPickles/Gongura1.png';
-import TomatoPickle from '../assets/images/VegPickles/TomatoPickle.png';
-import RedChilliPickle from '../assets/images/VegPickles/RedChilliPickle.png';
-import ChickenPickle from '../assets/images/NonVegPickles/Chicken1.png';
-import MuttonPickle from '../assets/images/NonVegPickles/MuttonPickle.png';
-import KaramPodi from '../assets/images/Podis/KandiPodi.png';
-import MysorePak from '../assets/images/Sweets/MysoreaPak.png';
-import Mixture from '../assets/images/Snacks/Mixture.png';
+const AvakayaPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943744/Avakaya1_cxypxn.png';
+const LemonPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943745/LemonPickle_azfpu9.png';
+const GonguraPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943744/Gongura1_v8bkpy.png';
+const TomatoPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943746/TomatoPickle_qz6dg9.png';
+const RedChilliPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943746/RedChilliPickle_oqnlqr.png';
+const ChickenPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944028/Chicken1_fzg80t.png';
+const MuttonPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944029/MuttonPickle_eswc8a.png';
+const KaramPodi = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944031/KandiPodi_mhdch9.png';
+const PrawnPickle = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944029/Prawn1_zc3db0.png';
+const Mixture = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944168/Mixture_tx6gn3.png';
+const Murukulu = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944168/Murukulu_ft78ro.png';
+const RibbonPakodi = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775944169/RibbonPakodi_lycdhz.png';
+const MysorePak = 'https://res.cloudinary.com/ddrul5cxk/image/upload/q_auto,f_auto,w_400,c_fill,g_auto,dpr_auto/v1775943146/MysoreaPak_iqqcgj.png';
 
 // Image map for product name lookup
 const imageMap = {
@@ -29,12 +32,16 @@ const imageMap = {
   'tomato pickle': TomatoPickle,
   'red chilli pickle': RedChilliPickle,
   'chicken pickle': ChickenPickle,
+  'prawns pickle': PrawnPickle,
+  'prawn pickle': PrawnPickle,
   'mutton pickle': MuttonPickle,
   'karam podi': KaramPodi,
   'kandi podi': KaramPodi,
   'mysore pak': MysorePak,
   'mysorepak': MysorePak,
   'mixture': Mixture,
+  'murukulu': Murukulu,
+  'ribbon pakodi': RibbonPakodi,
 };
 
 // Helper to get image from map
@@ -48,6 +55,36 @@ const getProductImage = (name) => {
 const ProductImage = ({ name, alt, image }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const normalizedName = name?.toLowerCase().trim();
+  const optimizedSweetAltMap = {
+    'avakaya pickle': 'Avakaya 1',
+    'avakaya': 'Avakaya 1',
+    'mango pickle': 'Avakaya 1',
+    'lemon pickle': 'Lemon Pickle',
+    'gongura pickle': 'Gongura 1',
+    'gongura': 'Gongura 1',
+    'tomato pickle': 'Tomato Pickle',
+    'red chilli pickle': 'Red Chilli Pickle',
+    'ginger pickle': 'Ginger Pickle',
+    'usirikaya pickle': 'Usirikaya Pickle',
+    'chicken pickle': 'Chicken 1',
+    'prawns pickle': 'Prawn 1',
+    'prawn pickle': 'Prawn 1',
+    'mutton pickle': 'Mutton Pickle',
+    'kandi podi': 'Kandi Podi',
+    'karam podi': 'Kandi Podi',
+    'mixture': 'Mixture',
+    'murukulu': 'Murukulu',
+    'ribbon pakodi': 'Ribbon Pakodi',
+    'nuvvundalu': 'Nuvvundalu',
+    'mysore pak': 'Mysore Pak',
+    'mysorepak': 'Mysore Pak',
+    'sanna boondhi laddu': 'Sanna Boondhi Laddu',
+    'cashew achu': 'Cashew Achu',
+    'sunnunda': 'Sunnunda',
+  };
+  const optimizedAlt = normalizedName ? optimizedSweetAltMap[normalizedName] : null;
+  const isOptimizedSweet = Boolean(optimizedAlt);
   
   // First try image from order, then fallback to name mapping
   const imageSrc = image || getProductImage(name);
@@ -60,7 +97,10 @@ const ProductImage = ({ name, alt, image }) => {
       {imageSrc ? (
         <img
           src={imageSrc}
-          alt={alt || name}
+          alt={optimizedAlt || alt || name}
+          loading={isOptimizedSweet ? 'lazy' : undefined}
+          width={isOptimizedSweet ? 400 : undefined}
+          height={isOptimizedSweet ? 300 : undefined}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             loaded ? 'opacity-100' : 'opacity-0'
           }`}

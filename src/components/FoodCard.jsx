@@ -13,6 +13,94 @@ const FoodCard = ({ product: baseProduct }) => {
   
   // Get product with overrides (price & stock)
   const product = getProduct(baseProduct.id) || baseProduct;
+  const normalizedProductName = product.name?.toLowerCase();
+  const isAvakayaPickle = product.id === 1 || normalizedProductName === 'mango avakaya' || normalizedProductName === 'avakaya pickle' || normalizedProductName === 'avakaya' || normalizedProductName === 'mango pickle';
+  const isGonguraPickle = product.id === 2 || normalizedProductName === 'gongura pickle' || normalizedProductName === 'gongura';
+  const isGingerPickle = product.id === 10 || normalizedProductName === 'ginger pickle';
+  const isLemonPickle = product.id === 11 || normalizedProductName === 'lemon pickle';
+  const isRedChilliPickle = product.id === 12 || normalizedProductName === 'red chilli pickle';
+  const isUsirikayaPickle = product.id === 13 || normalizedProductName === 'usirikaya pickle';
+  const isChickenPickle = product.id === 3 || normalizedProductName === 'chicken pickle';
+  const isPrawnPickle = product.id === 4 || normalizedProductName === 'prawns pickle' || normalizedProductName === 'prawn pickle';
+  const isMuttonPickle = product.id === 14 || normalizedProductName === 'mutton pickle';
+  const isKandiPodi = product.id === 7 || normalizedProductName === 'kandi podi' || normalizedProductName === 'karam podi';
+  const isKarvepakuPodi = product.id === 8 || normalizedProductName === 'karvepaku podi';
+  const isKobbariPodi = product.id === 9 || normalizedProductName === 'kobbari podi';
+  const isMixture = product.id === 101 || normalizedProductName === 'mixture';
+  const isMurukulu = product.id === 102 || normalizedProductName === 'murukulu';
+  const isRibbonPakodi = product.id === 103 || normalizedProductName === 'ribbon pakodi';
+  const isBoorelu = product.id === 205 || product.name?.toLowerCase() === 'boorelu';
+  const isAriselu = product.id === 201 || normalizedProductName === 'ariselu';
+  const isBandharuLaddu = product.id === 202 || normalizedProductName === 'bandharu laddu';
+  const isBoondhiAchu = product.id === 203 || normalizedProductName === 'boondhi achu';
+  const isBoondhiLaddu = product.id === 204 || normalizedProductName === 'boondhi laddu';
+  const isCashewAchu = product.id === 206 || normalizedProductName === 'cashew achu';
+  const isKajjiKayalu = product.id === 207 || normalizedProductName === 'kajji kayalu';
+  const isMysorePak = product.id === 208 || normalizedProductName === 'mysore pak' || normalizedProductName === 'mysorepak';
+  const isNuvvundalu = product.id === 209 || normalizedProductName === 'nuvvundalu';
+  const isPalliUndalu = product.id === 210 || normalizedProductName === 'palli undalu';
+  const isSannaBoondhiLaddu = product.id === 211 || normalizedProductName === 'sanna boondhi laddu';
+  const isSunnunda = product.id === 212 || normalizedProductName === 'sunnunda';
+  const isCloudinaryOptimizedPickle = isAvakayaPickle || isGonguraPickle || isGingerPickle || isLemonPickle || isRedChilliPickle || isUsirikayaPickle;
+  const isCloudinaryOptimizedNonVegPodi = isChickenPickle || isPrawnPickle || isMuttonPickle || isKandiPodi || isKarvepakuPodi || isKobbariPodi;
+  const isCloudinaryOptimizedSnacks = isMixture || isMurukulu || isRibbonPakodi;
+  const isCloudinaryOptimizedLandscape = isCloudinaryOptimizedPickle || isCloudinaryOptimizedNonVegPodi || isCloudinaryOptimizedSnacks;
+  const isCloudinaryOptimizedSweet = isAvakayaPickle || isGonguraPickle || isGingerPickle || isLemonPickle || isRedChilliPickle || isUsirikayaPickle || isChickenPickle || isPrawnPickle || isMuttonPickle || isKandiPodi || isKarvepakuPodi || isKobbariPodi || isMixture || isMurukulu || isRibbonPakodi || isBoorelu || isAriselu || isBandharuLaddu || isBoondhiAchu || isBoondhiLaddu || isCashewAchu || isKajjiKayalu || isMysorePak || isNuvvundalu || isPalliUndalu || isSannaBoondhiLaddu || isSunnunda;
+  const productImageAlt = isAvakayaPickle
+    ? 'Avakaya 1'
+  : isGonguraPickle
+    ? 'Gongura 1'
+  : isGingerPickle
+    ? 'Ginger Pickle'
+  : isLemonPickle
+    ? 'Lemon Pickle'
+  : isRedChilliPickle
+    ? 'Red Chilli Pickle'
+  : isUsirikayaPickle
+    ? 'Usirikaya Pickle'
+  : isChickenPickle
+    ? 'Chicken 1'
+  : isPrawnPickle
+    ? 'Prawn 1'
+  : isMuttonPickle
+    ? 'Mutton Pickle'
+  : isKandiPodi
+    ? 'Kandi Podi'
+  : isKarvepakuPodi
+    ? 'Karvepaku Podi'
+  : isKobbariPodi
+    ? 'Kobbari Podi'
+  : isMixture
+    ? 'Mixture'
+  : isMurukulu
+    ? 'Murukulu'
+  : isRibbonPakodi
+    ? 'Ribbon Pakodi'
+  : isBoorelu
+    ? 'Boorelu'
+  : isAriselu
+    ? 'Ariselu'
+  : isBandharuLaddu
+    ? 'Bandharu Laddu'
+  : isBoondhiAchu
+    ? 'Boondhi Achu'
+  : isBoondhiLaddu
+    ? 'Boondhi Laddu'
+  : isCashewAchu
+    ? 'Cashew Achu'
+  : isKajjiKayalu
+    ? 'Kajji Kayalu'
+  : isMysorePak
+    ? 'Mysore Pak'
+  : isNuvvundalu
+    ? 'Nuvvundalu'
+  : isPalliUndalu
+    ? 'Palli Undalu'
+  : isSannaBoondhiLaddu
+    ? 'Sanna Boondhi Laddu'
+  : isSunnunda
+    ? 'Sunnunda'
+  : product.name;
 
   const discount = product.originalPrice > product.price 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -42,10 +130,12 @@ const FoodCard = ({ product: baseProduct }) => {
       <div className="relative aspect-square overflow-hidden">
         <OptimizedImage
           src={product.image}
-          alt={product.name}
+          alt={productImageAlt}
           width={400}
-          height={400}
-          className={`transition-all duration-500 group-hover:scale-105 ${
+          height={isCloudinaryOptimizedLandscape ? 300 : 400}
+          loading={isCloudinaryOptimizedSweet ? 'lazy' : undefined}
+          sizes={isCloudinaryOptimizedSweet ? '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 400px' : undefined}
+          className={`${isCloudinaryOptimizedLandscape ? 'w-full h-full ' : ''}transition-all duration-500 group-hover:scale-105 ${
             isOutOfStock ? 'opacity-60 grayscale-[30%]' : ''
           }`}
           objectFit="cover"

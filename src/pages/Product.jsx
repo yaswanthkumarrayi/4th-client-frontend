@@ -59,6 +59,101 @@ const Product = () => {
 
   const currentPrice = product.weightPrices?.[selectedWeight] || product.price;
   const images = product.images || [product.image];
+  const normalizedProductName = product.name?.toLowerCase();
+  const isAvakayaPickle = product.id === 1 || normalizedProductName === 'mango avakaya' || normalizedProductName === 'avakaya pickle' || normalizedProductName === 'avakaya' || normalizedProductName === 'mango pickle';
+  const isGonguraPickle = product.id === 2 || normalizedProductName === 'gongura pickle' || normalizedProductName === 'gongura';
+  const isGingerPickle = product.id === 10 || normalizedProductName === 'ginger pickle';
+  const isLemonPickle = product.id === 11 || normalizedProductName === 'lemon pickle';
+  const isRedChilliPickle = product.id === 12 || normalizedProductName === 'red chilli pickle';
+  const isUsirikayaPickle = product.id === 13 || normalizedProductName === 'usirikaya pickle';
+  const isChickenPickle = product.id === 3 || normalizedProductName === 'chicken pickle';
+  const isPrawnPickle = product.id === 4 || normalizedProductName === 'prawns pickle' || normalizedProductName === 'prawn pickle';
+  const isMuttonPickle = product.id === 14 || normalizedProductName === 'mutton pickle';
+  const isKandiPodi = product.id === 7 || normalizedProductName === 'kandi podi' || normalizedProductName === 'karam podi';
+  const isKarvepakuPodi = product.id === 8 || normalizedProductName === 'karvepaku podi';
+  const isKobbariPodi = product.id === 9 || normalizedProductName === 'kobbari podi';
+  const isMixture = product.id === 101 || normalizedProductName === 'mixture';
+  const isMurukulu = product.id === 102 || normalizedProductName === 'murukulu';
+  const isRibbonPakodi = product.id === 103 || normalizedProductName === 'ribbon pakodi';
+  const isBoorelu = product.id === 205 || product.name?.toLowerCase() === 'boorelu';
+  const isAriselu = product.id === 201 || normalizedProductName === 'ariselu';
+  const isBandharuLaddu = product.id === 202 || normalizedProductName === 'bandharu laddu';
+  const isBoondhiAchu = product.id === 203 || normalizedProductName === 'boondhi achu';
+  const isBoondhiLaddu = product.id === 204 || normalizedProductName === 'boondhi laddu';
+  const isCashewAchu = product.id === 206 || normalizedProductName === 'cashew achu';
+  const isKajjiKayalu = product.id === 207 || normalizedProductName === 'kajji kayalu';
+  const isMysorePak = product.id === 208 || normalizedProductName === 'mysore pak' || normalizedProductName === 'mysorepak';
+  const isNuvvundalu = product.id === 209 || normalizedProductName === 'nuvvundalu';
+  const isPalliUndalu = product.id === 210 || normalizedProductName === 'palli undalu';
+  const isSannaBoondhiLaddu = product.id === 211 || normalizedProductName === 'sanna boondhi laddu';
+  const isSunnunda = product.id === 212 || normalizedProductName === 'sunnunda';
+  const isCloudinaryOptimizedPickle = isAvakayaPickle || isGonguraPickle || isGingerPickle || isLemonPickle || isRedChilliPickle || isUsirikayaPickle;
+  const isCloudinaryOptimizedNonVegPodi = isChickenPickle || isPrawnPickle || isMuttonPickle || isKandiPodi || isKarvepakuPodi || isKobbariPodi;
+  const isCloudinaryOptimizedSnacks = isMixture || isMurukulu || isRibbonPakodi;
+  const isCloudinaryOptimizedLandscape = isCloudinaryOptimizedPickle || isCloudinaryOptimizedNonVegPodi || isCloudinaryOptimizedSnacks;
+  const isCloudinaryOptimizedSweet = isAvakayaPickle || isGonguraPickle || isGingerPickle || isLemonPickle || isRedChilliPickle || isUsirikayaPickle || isChickenPickle || isPrawnPickle || isMuttonPickle || isKandiPodi || isKarvepakuPodi || isKobbariPodi || isMixture || isMurukulu || isRibbonPakodi || isBoorelu || isAriselu || isBandharuLaddu || isBoondhiAchu || isBoondhiLaddu || isCashewAchu || isKajjiKayalu || isMysorePak || isNuvvundalu || isPalliUndalu || isSannaBoondhiLaddu || isSunnunda;
+  const productImageAlt = isAvakayaPickle
+    ? 'Avakaya 1'
+  : isGonguraPickle
+    ? 'Gongura 1'
+  : isGingerPickle
+    ? 'Ginger Pickle'
+  : isLemonPickle
+    ? 'Lemon Pickle'
+  : isRedChilliPickle
+    ? 'Red Chilli Pickle'
+  : isUsirikayaPickle
+    ? 'Usirikaya Pickle'
+  : isChickenPickle
+    ? 'Chicken 1'
+  : isPrawnPickle
+    ? 'Prawn 1'
+  : isMuttonPickle
+    ? 'Mutton Pickle'
+  : isKandiPodi
+    ? 'Kandi Podi'
+  : isKarvepakuPodi
+    ? 'Karvepaku Podi'
+  : isKobbariPodi
+    ? 'Kobbari Podi'
+  : isMixture
+    ? 'Mixture'
+  : isMurukulu
+    ? 'Murukulu'
+  : isRibbonPakodi
+    ? 'Ribbon Pakodi'
+  : isBoorelu
+    ? 'Boorelu'
+  : isAriselu
+    ? 'Ariselu'
+  : isBandharuLaddu
+    ? 'Bandharu Laddu'
+  : isBoondhiAchu
+    ? 'Boondhi Achu'
+  : isBoondhiLaddu
+    ? 'Boondhi Laddu'
+  : isCashewAchu
+    ? 'Cashew Achu'
+  : isKajjiKayalu
+    ? 'Kajji Kayalu'
+  : isMysorePak
+    ? 'Mysore Pak'
+  : isNuvvundalu
+    ? 'Nuvvundalu'
+  : isPalliUndalu
+    ? 'Palli Undalu'
+  : isSannaBoondhiLaddu
+    ? 'Sanna Boondhi Laddu'
+  : isSunnunda
+    ? 'Sunnunda'
+  : null;
+  const getProductImageAlt = (index) => {
+    if (isAvakayaPickle) return index === 0 ? 'Avakaya 1' : 'Avakaya 2';
+    if (isGonguraPickle) return index === 0 ? 'Gongura 1' : 'Gongura 2';
+    if (isChickenPickle) return index === 0 ? 'Chicken 1' : 'Chicken 2';
+    if (isPrawnPickle) return index === 0 ? 'Prawn 1' : 'Prawn 2';
+    return productImageAlt || `${product.name} ${index + 1}`;
+  };
 
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity(quantity - 1);
@@ -129,12 +224,14 @@ const Product = () => {
                       <div className="w-full h-full bg-white shadow-soft rounded-2xl lg:rounded-3xl overflow-hidden">
                         <OptimizedImage
                           src={img}
-                          alt={`${product.name} ${index + 1}`}
-                          width={600}
-                          height={600}
-                          className=""
+                          alt={getProductImageAlt(index)}
+                          width={isCloudinaryOptimizedLandscape ? 400 : 600}
+                          height={isCloudinaryOptimizedLandscape ? 300 : 600}
+                          loading={isCloudinaryOptimizedSweet ? 'lazy' : undefined}
+                          sizes={isCloudinaryOptimizedSweet ? '(max-width: 1024px) 100vw, 600px' : undefined}
+                          className={isCloudinaryOptimizedLandscape ? 'w-full h-full' : ''}
                           objectFit="cover"
-                          priority={index === 0} // First image loads immediately
+                          priority={isCloudinaryOptimizedSweet ? false : index === 0} // First image loads immediately
                           blur={true}
                         />
                       </div>

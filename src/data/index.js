@@ -17,7 +17,7 @@ import sweetsImg from '../assets/images/Sweets.png';
 
 // Re-export product images utility
 export { 
-  productImages, 
+  default as productImages,
   categoryImages, 
   getProductImage, 
   getProductImages,
