@@ -1,19 +1,15 @@
 import { useState, useEffect } from 'react';
-import { 
-  Package, 
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCcw
-} from 'lucide-react';
+import { Pencil, Check, X } from 'lucide-react';
 import { adminAPI } from '../services/adminAPI';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [editingPrice, setEditingPrice] = useState(null);
+  const [priceInput, setPriceInput] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -22,393 +18,257 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      setErrorMessage('');
-      
       const data = await adminAPI.getProducts();
-      
-      if (data.success) {
-        setProducts(data.products);
-      } else {
-        setErrorMessage(data.message || 'Failed to fetch products');
-      }
+      if (data.success) setProducts(data.products);
     } catch (error) {
-      setErrorMessage('Failed to fetch products: ' + error.message);
+      console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const updateProduct = async (productId, updateData) => {
-    // Layer 1: Validate updateData object
-    if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
-      setErrorMessage('Error: Invalid update data');
-      return;
-    }
-    
-    // Layer 2: Ensure productId is a valid number
     const numericProductId = Number(productId);
     if (isNaN(numericProductId) || numericProductId <= 0) {
-      setErrorMessage('Error: Invalid product ID');
+      alert('Error: Invalid product ID');
       return;
     }
-    
-    // Layer 3: Build cleaned data with validation
     const cleanedData = {};
-    
-    // pricePerKg - must be positive number
-    if (updateData.pricePerKg !== undefined && updateData.pricePerKg !== null && updateData.pricePerKg !== '') {
+    if (updateData.pricePerKg !== undefined && updateData.pricePerKg !== '') {
       const price = Number(updateData.pricePerKg);
-      if (!isNaN(price) && price > 0) {
-        cleanedData.pricePerKg = price;
-      }
+      if (!isNaN(price) && price > 0) cleanedData.pricePerKg = price;
     }
-    
-    // inStock - boolean (handle false correctly)
     if ('inStock' in updateData) {
       cleanedData.inStock = updateData.inStock === true || updateData.inStock === 'true';
     }
-    
-    // stockQuantity - number >= 0 or null
-    if ('stockQuantity' in updateData) {
-      if (updateData.stockQuantity === null || updateData.stockQuantity === '') {
-        cleanedData.stockQuantity = null;
-      } else {
-        const qty = Number(updateData.stockQuantity);
-        if (!isNaN(qty) && qty >= 0) {
-          cleanedData.stockQuantity = qty;
-        }
-      }
-    }
-    
-    // isActive - boolean
-    if ('isActive' in updateData) {
-      cleanedData.isActive = updateData.isActive === true || updateData.isActive === 'true';
-    }
-    
-    // Layer 4: Check if we have any valid fields
     if (Object.keys(cleanedData).length === 0) {
-      setErrorMessage('Error: No valid fields to update. Please provide pricePerKg, inStock, or isActive.');
+      alert('Error: No valid fields to update');
       return;
     }
-    
     try {
       setSaving(numericProductId);
-      setErrorMessage('');
-      
       const result = await adminAPI.updateProduct(numericProductId, cleanedData);
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Update failed');
-      }
-      
-      // Refetch products to ensure UI is in sync with database
+      if (!result.success) throw new Error(result.message || 'Update failed');
       await fetchProducts();
-      
-      setSuccessMessage('Product updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      setErrorMessage('Failed to update: ' + error.message);
-      setTimeout(() => setErrorMessage(''), 5000);
+      alert('Failed to update: ' + error.message);
     } finally {
       setSaving(null);
     }
   };
 
   const toggleStock = async (product) => {
-    // Ensure product.id is a valid number
     const productId = Number(product.id || product.productId);
     if (isNaN(productId) || productId <= 0) {
-      setErrorMessage('Error: Invalid product ID');
+      alert('Error: Invalid product ID');
       return;
     }
-    
-    // Explicitly set the new stock value (inverse of current)
-    const currentInStock = product.inStock === true;
-    const newInStock = !currentInStock;
-    
-    await updateProduct(productId, { inStock: newInStock });
+    await updateProduct(productId, { inStock: !product.inStock });
   };
 
-  const handlePriceUpdate = async (product, newPrice) => {
-    // Validate price before sending
+  const handlePriceUpdate = async (productId, newPrice) => {
     const pricePerKg = parseInt(newPrice, 10);
     if (isNaN(pricePerKg) || pricePerKg <= 0) {
-      setErrorMessage('Please enter a valid price (must be a positive number greater than 0)');
-      setTimeout(() => setErrorMessage(''), 3000);
+      alert('Please enter a valid price (must be a positive number)');
       return;
     }
-    
-    // Ensure product.id is a valid number
-    const productId = Number(product.id || product.productId);
-    if (isNaN(productId) || productId <= 0) {
-      setErrorMessage('Error: Invalid product ID');
-      return;
-    }
-    
-    await updateProduct(productId, { pricePerKg });
+    await updateProduct(Number(productId), { pricePerKg });
+    setEditingPrice(null);
   };
 
-  const resetProduct = async (productId) => {
-    // Validate productId
-    const numericProductId = Number(productId);
-    if (isNaN(numericProductId) || numericProductId <= 0) {
-      setErrorMessage('Error: Invalid product ID');
-      return;
-    }
-    
-    if (!confirm('Reset this product to default values?')) return;
-    
-    try {
-      setSaving(numericProductId);
-      setErrorMessage('');
-      
-      const result = await adminAPI.resetProduct(numericProductId);
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Reset failed');
-      }
-      
-      await fetchProducts();
-      
-      setSuccessMessage('Product reset to default!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
-      setErrorMessage('Failed to reset: ' + error.message);
-      setTimeout(() => setErrorMessage(''), 5000);
-    } finally {
-      setSaving(null);
-    }
-  };
+  const formatCurrency = (amount) => `₹${Number(amount).toLocaleString('en-IN')}`;
 
-  const formatCurrency = (amount) => {
-    return `₹${amount.toLocaleString('en-IN')}`;
-  };
+  // Build category list dynamically from products
+  const categories = [...new Set(products.map((p) => p.category))].sort();
+  const categoryTabs = ['all', ...categories];
 
-  // Group products by category
-  const groupedProducts = products.reduce((acc, product) => {
-    if (!acc[product.category]) {
-      acc[product.category] = [];
-    }
-    acc[product.category].push(product);
-    return acc;
-  }, {});
+  // Filter by category + search
+  const visibleProducts = products.filter((p) => {
+    const matchCat = filter === 'all' || p.category === filter;
+    const matchSearch =
+      !search ||
+      p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      String(p.id).includes(search);
+    return matchCat && matchSearch;
+  });
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <div className="pb-4 border-b border-[#e5e7eb]">
+          <h1 className="text-xl font-semibold text-gray-900">Products</h1>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-40 bg-gray-100 rounded-xl animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 font-rubik">Manage Products</h1>
-          <p className="text-gray-500 mt-1 font-montserrat text-sm">Update prices and stock availability</p>
-        </div>
-        <button
-          onClick={fetchProducts}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-montserrat text-sm"
-        >
-          <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+    <div className="space-y-5">
+      {/* Page Header */}
+      <div className="pb-4 border-b border-[#e5e7eb]">
+        <h1 className="text-xl font-semibold text-gray-900">Products</h1>
       </div>
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-          <p className="text-green-700 font-montserrat text-sm">{successMessage}</p>
-        </div>
-      )}
+      {/* Search */}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by name or ID..."
+        className="w-full md:w-72 h-10 px-4 border border-[#e5e7eb] rounded-lg text-sm focus:ring-2 focus:ring-[#7B0D1E] focus:border-transparent outline-none"
+      />
 
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-          <p className="text-red-700 font-montserrat text-sm">{errorMessage}</p>
-        </div>
-      )}
-
-      {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <p className="text-blue-700 text-sm font-montserrat">
-            Update product prices (₹/kg) and toggle stock status. Changes are saved to database and reflect immediately on the website.
-          </p>
-        </div>
+      {/* Category Filter Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {categoryTabs.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors min-h-[40px] ${
+              filter === cat
+                ? 'bg-[#7B0D1E] text-white'
+                : 'bg-white text-gray-600 border border-[#e5e7eb] hover:bg-gray-50'
+            }`}
+          >
+            {cat === 'all' ? 'All' : cat}
+          </button>
+        ))}
       </div>
 
-      {/* Products by Category */}
-      {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-        <div key={category} className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-4 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-primary/5 to-primary/10 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800 font-rubik text-base sm:text-lg">{category}</h2>
-            <p className="text-gray-500 text-xs sm:text-sm font-montserrat">{categoryProducts.length} products</p>
-          </div>
-          
-          <div className="divide-y divide-gray-100">
-            {categoryProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                saving={saving === product.id}
-                onToggleStock={toggleStock}
-                onPriceUpdate={handlePriceUpdate}
-                onReset={resetProduct}
-                formatCurrency={formatCurrency}
-              />
-            ))}
-          </div>
+      {/* Products Grid — 2 columns, no images */}
+      {visibleProducts.length === 0 ? (
+        <div className="py-12 text-center text-gray-400 text-sm">
+          No products found
         </div>
-      ))}
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          {visibleProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              saving={saving === product.id}
+              editingPrice={editingPrice}
+              priceInput={priceInput}
+              onToggleStock={toggleStock}
+              onPriceUpdate={handlePriceUpdate}
+              onEditPrice={(id, price) => {
+                setEditingPrice(id);
+                setPriceInput(price.toString());
+              }}
+              onCancelEdit={() => setEditingPrice(null)}
+              onPriceInputChange={setPriceInput}
+              formatCurrency={formatCurrency}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-// Individual Product Card Component
-const ProductCard = ({ product, saving, onToggleStock, onPriceUpdate, onReset, formatCurrency }) => {
-  const [priceInput, setPriceInput] = useState(product.pricePerKg.toString());
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Update priceInput when product prop changes (after refetch)
-  useEffect(() => {
-    setPriceInput(product.pricePerKg.toString());
-  }, [product.pricePerKg]);
-
-  const handleSave = () => {
-    onPriceUpdate(product, priceInput);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setPriceInput(product.pricePerKg.toString());
-    setIsEditing(false);
-  };
+const ProductCard = ({
+  product,
+  saving,
+  editingPrice,
+  priceInput,
+  onToggleStock,
+  onPriceUpdate,
+  onEditPrice,
+  onCancelEdit,
+  onPriceInputChange,
+  formatCurrency,
+}) => {
+  const isEditing = editingPrice === product.id;
 
   return (
-    <div className="p-4 sm:p-5 hover:bg-gray-50/50 transition-colors">
-      <div className="space-y-4">
-        {/* Product Header */}
-        <div className="flex items-start gap-3">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Package className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-800 font-montserrat text-sm sm:text-base">
-              {product.name}
-            </h3>
-            <p className="text-gray-500 text-xs font-montserrat mt-0.5">
-              ID: {product.id}
-            </p>
-          </div>
-        </div>
+    <div className="bg-white rounded-xl border border-[#e5e7eb] overflow-hidden">
+      {/* Card Body */}
+      <div className="p-3 space-y-2">
+        {/* Product ID — highlighted */}
+        <span className="text-xs font-mono bg-[#fef3c7] text-[#854d0e] px-2 py-0.5 rounded inline-block">
+          #{product.id}
+        </span>
 
-        {/* Price Section */}
-        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 font-montserrat">
-              Price per KG
-            </label>
-            <button
-              onClick={() => onReset(product.id)}
-              disabled={saving}
-              className="text-xs text-orange-600 hover:text-orange-700 font-medium"
-            >
-              Reset to default
-            </button>
-          </div>
+        {/* Name */}
+        <p className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2">
+          {product.name}
+        </p>
 
+        {/* Category */}
+        <p className="text-xs text-gray-400">{product.category}</p>
+
+        {/* Price Row */}
+        <div className="flex items-center gap-1 pt-1">
           {isEditing ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600 font-montserrat">₹</span>
-                <input
-                  type="number"
-                  value={priceInput}
-                  onChange={(e) => setPriceInput(e.target.value)}
-                  className="flex-1 px-4 py-3 border-2 border-primary/30 rounded-lg text-base font-semibold font-montserrat focus:outline-none focus:border-primary"
-                  placeholder="Price per kg"
-                  autoFocus
-                />
-                <span className="text-gray-600 font-montserrat">/kg</span>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 bg-primary text-white px-4 py-2.5 rounded-lg font-medium font-montserrat hover:bg-primary-dark transition-colors disabled:opacity-50"
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg font-medium font-montserrat hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="flex items-center gap-1 w-full">
+              <input
+                type="number"
+                value={priceInput}
+                onChange={(e) => onPriceInputChange(e.target.value)}
+                className="w-full px-2 py-1 border border-[#e5e7eb] rounded text-xs focus:ring-2 focus:ring-[#7B0D1E] focus:border-transparent outline-none"
+                autoFocus
+              />
+              <button
+                onClick={() => onPriceUpdate(product.id, priceInput)}
+                disabled={saving}
+                className="p-1.5 text-[#16a34a] hover:bg-green-50 rounded disabled:opacity-50 flex-shrink-0"
+              >
+                <Check className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={onCancelEdit}
+                className="p-1.5 text-[#dc2626] hover:bg-red-50 rounded flex-shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           ) : (
-            <div>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-2xl font-bold text-gray-800 font-rubik">
-                  {formatCurrency(product.pricePerKg)}
-                </span>
-                <span className="text-gray-500 font-montserrat">/kg</span>
-              </div>
-              <div className="text-sm text-gray-600 font-montserrat mb-3">
-                250gm = {formatCurrency(product.weightPrices['250gm'])} • 
-                500gm = {formatCurrency(product.weightPrices['500gm'])} • 
-                1kg = {formatCurrency(product.weightPrices['1kg'])}
-              </div>
+            <div className="flex items-center justify-between w-full">
+              <p className="text-sm font-bold text-[#7B0D1E]">
+                {formatCurrency(product.pricePerKg)}
+                <span className="text-xs font-normal text-gray-400"> /kg</span>
+              </p>
               <button
-                onClick={() => setIsEditing(true)}
-                className="w-full bg-white border-2 border-primary text-primary px-4 py-2.5 rounded-lg font-medium font-montserrat hover:bg-primary hover:text-white transition-colors"
+                onClick={() => onEditPrice(product.id, product.pricePerKg)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
               >
-                Update Price
+                <Pencil className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Stock Toggle */}
-        <div className="bg-gray-50 rounded-xl p-4">
-          <label className="text-sm font-medium text-gray-700 font-montserrat block mb-3">
-            Stock Status
-          </label>
-          
-          <button
-            onClick={() => onToggleStock(product)}
-            disabled={saving}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all ${
-              product.inStock 
-                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                : 'bg-red-100 text-red-800 hover:bg-red-200'
-            } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+      {/* Stock Toggle — bottom strip */}
+      <div className="border-t border-[#e5e7eb] px-3 py-2.5">
+        <button
+          onClick={() => onToggleStock(product)}
+          disabled={saving}
+          className={`w-full flex items-center justify-between text-xs font-semibold py-1.5 px-2 rounded-lg transition-colors disabled:opacity-50 min-h-[36px] ${
+            product.inStock
+              ? 'bg-green-50 text-[#16a34a]'
+              : 'bg-red-50 text-[#dc2626]'
+          }`}
+        >
+          <span>{product.inStock ? 'In Stock' : 'Out of Stock'}</span>
+          {/* Toggle pill */}
+          <div
+            className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+              product.inStock ? 'bg-[#16a34a]' : 'bg-gray-300'
+            }`}
           >
-            <span className="flex items-center gap-2 font-montserrat">
-              {product.inStock ? (
-                <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  In Stock
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-5 h-5" />
-                  Out of Stock
-                </>
-              )}
-            </span>
-            <span className="text-xs opacity-75">Tap to toggle</span>
-          </button>
-        </div>
+            <div
+              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
+                product.inStock ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            />
+          </div>
+        </button>
       </div>
     </div>
   );

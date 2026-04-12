@@ -1,18 +1,9 @@
 import { useState, useEffect } from 'react';
-import { 
-  ShoppingCart, 
-  DollarSign, 
-  Package, 
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  Loader2
-} from 'lucide-react';
+import { DollarSign, ShoppingBag, CalendarDays, PackageCheck } from 'lucide-react';
 import { adminAPI } from '../services/adminAPI';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
-  const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,10 +15,9 @@ const AdminDashboard = () => {
       const data = await adminAPI.getDashboard();
       if (data.success) {
         setStats(data.stats);
-        setRecentOrders(data.recentOrders);
       }
     } catch (error) {
-      // Failed to fetch dashboard silently
+      console.error('Error fetching dashboard:', error);
     } finally {
       setLoading(false);
     }
@@ -41,31 +31,56 @@ const AdminDashboard = () => {
     }).format(amount);
   };
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const statCards = [
+    {
+      label: 'Total Revenue',
+      value: formatCurrency(stats?.totalRevenue || 0),
+      icon: DollarSign,
+      iconBg: '#fef3c7',
+      iconColor: '#d97706',
+    },
+    {
+      label: 'Total Orders',
+      value: stats?.totalOrders || 0,
+      icon: ShoppingBag,
+      iconBg: '#ede9fe',
+      iconColor: '#7c3aed',
+    },
+    {
+      label: 'This Month',
+      value: stats?.monthOrders || 0,
+      icon: CalendarDays,
+      iconBg: '#dbeafe',
+      iconColor: '#2563eb',
+    },
+    {
+      label: 'Delivered',
+      value: stats?.totalDelivered || 0,
+      icon: PackageCheck,
+      iconBg: '#dcfce7',
+      iconColor: '#16a34a',
+    },
+  ];
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      processing: 'bg-purple-100 text-purple-700',
-      out_for_delivery: 'bg-orange-100 text-orange-700',
-      delivered: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-700';
-  };
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-2 md:mt-0">{today}</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-gray-200 rounded-[12px] animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -73,125 +88,38 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 font-rubik">Dashboard</h1>
-        <p className="text-gray-500 mt-1 font-montserrat text-sm">Welcome to Samskruthi Foods Admin</p>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-2 md:mt-0">{today}</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Revenue */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm font-montserrat">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {formatCurrency(stats?.totalRevenue || 0)}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <p className="text-xs text-green-600 mt-2 font-montserrat">
-            Today: {formatCurrency(stats?.todayRevenue || 0)}
-          </p>
-        </div>
-
-        {/* Total Orders */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm font-montserrat">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stats?.totalOrders || 0}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <ShoppingCart className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <p className="text-xs text-blue-600 mt-2 font-montserrat">
-            Today: {stats?.todayOrders || 0} orders
-          </p>
-        </div>
-
-        {/* Pending Orders */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm font-montserrat">Pending Orders</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stats?.pendingOrders || 0}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-          <p className="text-xs text-yellow-600 mt-2 font-montserrat">
-            Needs attention
-          </p>
-        </div>
-
-        {/* This Month */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm font-montserrat">This Month</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stats?.monthOrders || 0}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-          <p className="text-xs text-purple-600 mt-2 font-montserrat">
-            Orders this month
-          </p>
-        </div>
-      </div>
-
-      {/* Recent Orders */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 font-rubik">Recent Orders</h2>
-        </div>
-        
-        <div className="divide-y divide-gray-100">
-          {recentOrders.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 font-montserrat">
-              No orders yet
-            </div>
-          ) : (
-            recentOrders.map((order) => (
-              <div key={order.orderId} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Package className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800 font-montserrat text-sm">
-                      {order.orderId}
-                    </p>
-                    <p className="text-gray-500 text-xs font-montserrat">
-                      {order.customer?.name || 'Customer'}
-                    </p>
-                  </div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        {statCards.map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={idx}
+              className="bg-white rounded-[12px] border border-[#e5e7eb] p-4 md:p-6"
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: card.iconBg }}
+                >
+                  <Icon
+                    className="w-6 h-6"
+                    style={{ color: card.iconColor }}
+                  />
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-800 font-montserrat text-sm">
-                    {formatCurrency(order.totalAmount)}
-                  </p>
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.orderStatus)}`}>
-                    {order.orderStatus?.replace('_', ' ')}
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-500 mb-1">{card.label}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{card.value}</p>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
