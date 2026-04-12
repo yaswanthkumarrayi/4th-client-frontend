@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, SlidersHorizontal } from 'lucide-react';
 import TopBanner from '../components/TopBanner';
@@ -14,7 +14,12 @@ import { useProductConfig } from '../components/ProductConfigContext';
 const Category = () => {
   const { slug } = useParams();
   const { isCartOpen, closeCart, cartItems, updateQuantity, removeItem } = useCart();
-  const { getProductsByCategory } = useProductConfig();
+  const {
+    getProductsByCategory,
+    ensureProductsLoaded,
+    hasLoadedCatalog,
+    error: configError
+  } = useProductConfig();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
     availability: [],
@@ -26,6 +31,14 @@ const Category = () => {
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+
+  useEffect(() => {
+    if (!hasLoadedCatalog) {
+      ensureProductsLoaded().catch(() => {
+        // Error state is already handled in context.
+      });
+    }
+  }, [ensureProductsLoaded, hasLoadedCatalog]);
 
   // Get products by category with overrides applied
   const categoryProducts = getProductsByCategory(categoryName);
@@ -53,6 +66,24 @@ const Category = () => {
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
   };
+
+  if (!hasLoadedCatalog && !configError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!hasLoadedCatalog && configError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <p className="text-red-600 font-montserrat text-sm text-center">
+          Unable to load products right now. Please refresh the page.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">

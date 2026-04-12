@@ -1,16 +1,15 @@
-/**
- * Product Configuration Context
- * 
- * Fetches products from backend API and merges with frontend images.
- * This is the single source of truth for product data in the frontend.
- */
-
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { API_URL } from '../services/apiConfig.js';
-import { mergeProductWithImages, calculateWeightPrices } from '../data';
-import { bestSellerIds, newArrivalIds } from '../data';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import { mergeProductWithImages, calculateWeightPrices, bestSellerIds, newArrivalIds } from '../data';
+import { productAPI } from '../services/api.js';
 
 const ProductConfigContext = createContext();
+const CATALOG_PAGE_LIMIT = 48;
+
+const shouldPreloadCatalogForRoute = (pathname) => {
+  if (!pathname || pathname === '/') return false;
+  return !pathname.startsWith('/admin');
+};
 
 export const useProductConfig = () => {
   const context = useContext(ProductConfigContext);
@@ -21,94 +20,142 @@ export const useProductConfig = () => {
 };
 
 export const ProductConfigProvider = ({ children }) => {
+  const location = useLocation();
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastFetched, setLastFetched] = useState(null);
+  const [hasLoadedCatalog, setHasLoadedCatalog] = useState(false);
+  const activeFetchRef = useRef(null);
 
-  // Fetch products from backend API
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      const response = await fetch(`${API_URL}/orders/products`);
-      const data = await response.json();
-      
-      if (data.success && data.products) {
-        // Merge API data with frontend images
-        const productsWithImages = data.products.map(product => mergeProductWithImages(product));
-        setProducts(productsWithImages);
-        setLastFetched(new Date());
-      } else {
-        throw new Error(data.message || 'Failed to fetch products');
-      }
-      
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  const fetchProducts = useCallback(async ({ force = false } = {}) => {
+    if (!force && hasLoadedCatalog) {
+      return products;
     }
-  }, []);
 
-  // Initial fetch on mount
+    if (activeFetchRef.current) {
+      return activeFetchRef.current;
+    }
+
+    const fetchPromise = (async () => {
+      try {
+        setLoading(true);
+
+        let page = 1;
+        let hasNextPage = true;
+        const mergedProducts = [];
+
+        while (hasNextPage) {
+          const response = await productAPI.listProducts({
+            page,
+            limit: CATALOG_PAGE_LIMIT,
+          });
+
+          if (!response?.success) {
+            throw new Error(response?.message || 'Failed to fetch products');
+          }
+
+          const currentPageProducts = (response.products || []).map((product) =>
+            mergeProductWithImages(product)
+          );
+          mergedProducts.push(...currentPageProducts);
+
+          const pagination = response.pagination || {};
+          hasNextPage = Boolean(pagination.hasNextPage);
+          page = (pagination.page || page) + 1;
+
+          // Safety guard for malformed pagination data.
+          if (page > 100) {
+            hasNextPage = false;
+          }
+        }
+
+        const uniqueProducts = Array.from(
+          new Map(
+            mergedProducts.map((product) => [product.id || product.productId, product])
+          ).values()
+        );
+
+        setProducts(uniqueProducts);
+        setHasLoadedCatalog(true);
+        setLastFetched(new Date());
+        setError(null);
+        return uniqueProducts;
+      } catch (err) {
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    activeFetchRef.current = fetchPromise.finally(() => {
+      activeFetchRef.current = null;
+    });
+
+    return activeFetchRef.current;
+  }, [hasLoadedCatalog, products]);
+
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    if (!hasLoadedCatalog && shouldPreloadCatalogForRoute(location.pathname)) {
+      fetchProducts().catch(() => {
+        // Error state is already set in fetchProducts.
+      });
+    }
+  }, [fetchProducts, hasLoadedCatalog, location.pathname]);
 
-  // Get product by ID
+  const ensureProductsLoaded = useCallback(() => {
+    if (hasLoadedCatalog) {
+      return Promise.resolve(products);
+    }
+    return fetchProducts();
+  }, [fetchProducts, hasLoadedCatalog, products]);
+
   const getProduct = useCallback((productId) => {
-    const id = parseInt(productId);
-    return products.find(p => p.id === id || p.productId === id) || null;
+    const id = Number.parseInt(productId, 10);
+    return products.find((product) => product.id === id || product.productId === id) || null;
   }, [products]);
 
-  // Get all active products
   const getAllProducts = useCallback(() => {
-    return products.filter(p => p.isActive !== false);
+    return products.filter((product) => product.isActive !== false);
   }, [products]);
 
-  // Get products by category
   const getProductsByCategory = useCallback((category) => {
-    return getAllProducts().filter(p => {
-      const productCategory = p.category.toLowerCase().replace(/\s+/g, '-');
+    return getAllProducts().filter((product) => {
+      const productCategory = product.category.toLowerCase().replace(/\s+/g, '-');
       const searchCategory = category.toLowerCase().replace(/\s+/g, '-');
-      return productCategory === searchCategory || p.category === category;
+      return productCategory === searchCategory || product.category === category;
     });
   }, [getAllProducts]);
 
-  // Get best sellers (products featured on homepage)
   const getBestSellers = useCallback(() => {
     return bestSellerIds
-      .map(id => getProduct(id))
-      .filter(p => p !== null && p.isActive !== false);
+      .map((id) => getProduct(id))
+      .filter((product) => product !== null && product.isActive !== false);
   }, [getProduct]);
 
-  // Get new arrivals
   const getNewArrivals = useCallback(() => {
     return newArrivalIds
-      .map(id => getProduct(id))
-      .filter(p => p !== null && p.isActive !== false);
+      .map((id) => getProduct(id))
+      .filter((product) => product !== null && product.isActive !== false);
   }, [getProduct]);
 
-  // Check if product is in stock
   const isInStock = useCallback((productId) => {
     const product = getProduct(productId);
     return product ? product.inStock !== false : false;
   }, [getProduct]);
 
-  // Refresh products from API
   const refreshProducts = useCallback(() => {
-    return fetchProducts();
+    return fetchProducts({ force: true });
   }, [fetchProducts]);
 
   const value = {
-    // State
     products,
     loading,
     error,
     lastFetched,
-    
-    // Methods
+    hasLoadedCatalog,
+    ensureProductsLoaded,
     getProduct,
     getAllProducts,
     getProductsByCategory,
@@ -116,8 +163,6 @@ export const ProductConfigProvider = ({ children }) => {
     getNewArrivals,
     isInStock,
     refreshProducts,
-    
-    // Utility
     calculateWeightPrices,
   };
 

@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, User, ShoppingCart, LogOut, ChevronDown } from 'lucide-react';
 import { navLinks } from '../data';
+import { mergeProductWithImages } from '../data';
+import { productAPI } from '../services/api.js';
 import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
-import { useProductConfig } from './ProductConfigContext';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import logoImage from '../assets/images/samskruthi_pfp.jpg';
 
 const Navbar = () => {
@@ -15,9 +17,11 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [mobileSearchResults, setMobileSearchResults] = useState([]);
   const [showMobileResults, setShowMobileResults] = useState(false);
+  const [isMobileSearching, setIsMobileSearching] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
@@ -26,26 +30,13 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { totalItems, openCart } = useCart();
   const { user, openAuthModal, logout } = useAuth();
-  const { getAllProducts } = useProductConfig();
-
-  // Search function using products from context
-  const searchProducts = (query) => {
-    if (!query.trim()) return [];
-    const lowerQuery = query.toLowerCase();
-    const products = getAllProducts();
-    return products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(lowerQuery) ||
-        product.category.toLowerCase().includes(lowerQuery)
-    ).slice(0, 6); // Limit to 6 results
-  };
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
+  const debouncedMobileSearchQuery = useDebouncedValue(mobileSearchQuery, 300);
 
   // Handle desktop search
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    const results = searchProducts(query);
-    setSearchResults(results);
     setShowResults(query.length > 0);
   };
 
@@ -53,8 +44,6 @@ const Navbar = () => {
   const handleMobileSearchChange = (e) => {
     const query = e.target.value;
     setMobileSearchQuery(query);
-    const results = searchProducts(query);
-    setMobileSearchResults(results);
     setShowMobileResults(query.length > 0);
   };
 
@@ -62,12 +51,72 @@ const Navbar = () => {
   const handleProductClick = (productId) => {
     setSearchQuery('');
     setMobileSearchQuery('');
+    setSearchResults([]);
+    setMobileSearchResults([]);
     setShowResults(false);
     setShowMobileResults(false);
     setIsMenuOpen(false);
     setIsSearchOpen(false);
     navigate(`/product/${productId}`);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const runSearch = async () => {
+      const query = debouncedSearchQuery.trim();
+      if (query.length < 2) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+
+      setIsSearching(true);
+      const response = await productAPI.search(query, 6);
+      if (!isMounted) return;
+
+      if (response?.success && Array.isArray(response.products)) {
+        setSearchResults(response.products.map(mergeProductWithImages));
+      } else {
+        setSearchResults([]);
+      }
+      setIsSearching(false);
+    };
+
+    runSearch();
+    return () => {
+      isMounted = false;
+    };
+  }, [debouncedSearchQuery]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const runMobileSearch = async () => {
+      const query = debouncedMobileSearchQuery.trim();
+      if (query.length < 2) {
+        setMobileSearchResults([]);
+        setIsMobileSearching(false);
+        return;
+      }
+
+      setIsMobileSearching(true);
+      const response = await productAPI.search(query, 6);
+      if (!isMounted) return;
+
+      if (response?.success && Array.isArray(response.products)) {
+        setMobileSearchResults(response.products.map(mergeProductWithImages));
+      } else {
+        setMobileSearchResults([]);
+      }
+      setIsMobileSearching(false);
+    };
+
+    runMobileSearch();
+    return () => {
+      isMounted = false;
+    };
+  }, [debouncedMobileSearchQuery]);
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -197,7 +246,15 @@ const Navbar = () => {
               {/* Desktop Search Results Dropdown */}
               {showResults && isSearchOpen && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
-                  {searchResults.length > 0 ? (
+                  {searchQuery.trim().length < 2 ? (
+                    <div className="px-4 py-6 text-center text-gray-500 font-montserrat">
+                      Type at least 2 characters
+                    </div>
+                  ) : isSearching ? (
+                    <div className="px-4 py-6 text-center text-gray-500 font-montserrat">
+                      Searching...
+                    </div>
+                  ) : searchResults.length > 0 ? (
                     <ul>
                       {searchResults.map((product) => (
                         <li
@@ -472,7 +529,15 @@ const Navbar = () => {
               {/* Mobile Search Results */}
               {showMobileResults && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 max-h-64 overflow-y-auto">
-                  {mobileSearchResults.length > 0 ? (
+                  {mobileSearchQuery.trim().length < 2 ? (
+                    <div className="px-4 py-6 text-center text-gray-500 font-montserrat">
+                      Type at least 2 characters
+                    </div>
+                  ) : isMobileSearching ? (
+                    <div className="px-4 py-6 text-center text-gray-500 font-montserrat">
+                      Searching...
+                    </div>
+                  ) : mobileSearchResults.length > 0 ? (
                     <ul>
                       {mobileSearchResults.map((product) => (
                         <li

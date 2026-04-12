@@ -1,14 +1,12 @@
 import { useRef, useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import FoodCard from './FoodCard';
 
-const ProductSlider = ({ products, onAddToCart }) => {
+const ProductSlider = ({ products = [], onAddToCart, CardComponent = FoodCard }) => {
   const sliderRef = useRef(null);
   const [centerIndex, setCenterIndex] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
 
   const updateCenterIndex = () => {
+    if (!products.length) return;
     if (sliderRef.current) {
       const slider = sliderRef.current;
       const scrollLeft = slider.scrollLeft;
@@ -17,9 +15,7 @@ const ProductSlider = ({ products, onAddToCart }) => {
       const newCenterIndex = Math.floor(viewportCenter / cardWidth);
       setCenterIndex(Math.min(Math.max(newCenterIndex, 0), products.length - 1));
       
-      // Update scroll buttons
-      setCanScrollLeft(scrollLeft > 10);
-      setCanScrollRight(scrollLeft < slider.scrollWidth - slider.clientWidth - 10);
+      // center card index drives visual emphasis.
     }
   };
 
@@ -33,6 +29,7 @@ const ProductSlider = ({ products, onAddToCart }) => {
   }, [products.length]);
 
   const scrollToIndex = (index) => {
+    if (!products.length) return;
     if (sliderRef.current) {
       const slider = sliderRef.current;
       const cardWidth = slider.scrollWidth / products.length;
@@ -43,15 +40,9 @@ const ProductSlider = ({ products, onAddToCart }) => {
     }
   };
 
-  const scrollPrev = () => {
-    const newIndex = Math.max(0, centerIndex - 1);
-    scrollToIndex(newIndex);
-  };
-
-  const scrollNext = () => {
-    const newIndex = Math.min(products.length - 1, centerIndex + 1);
-    scrollToIndex(newIndex);
-  };
+  if (!products.length) {
+    return null;
+  }
 
   return (
     <div className="relative">
@@ -72,7 +63,7 @@ const ProductSlider = ({ products, onAddToCart }) => {
                   : 'scale-95 translate-y-0 opacity-90'
               }`}
             >
-              <FoodCard product={product} onAddToCart={onAddToCart} />
+              <CardComponent product={product} onAddToCart={onAddToCart} />
             </div>
           </div>
         ))}

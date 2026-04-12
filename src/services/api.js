@@ -83,4 +83,52 @@ export const orderAPI = {
   },
 };
 
-export default { authAPI, userAPI, orderAPI };
+const buildQueryParams = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) {
+        searchParams.set(key, value.join(','));
+      }
+      return;
+    }
+
+    searchParams.set(key, String(value));
+  });
+
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
+export const productAPI = {
+  listProducts: async ({ page = 1, limit = 12, category, inStock, ids } = {}) => {
+    const query = buildQueryParams({ page, limit, category, inStock, ids });
+    return apiRequest(`/products${query}`, { method: 'GET' });
+  },
+
+  getBestSellers: async ({ page = 1, limit = 8 } = {}) => {
+    const query = buildQueryParams({ page, limit });
+    return apiRequest(`/products/best-sellers${query}`, { method: 'GET' });
+  },
+
+  getYouMayAlsoLike: async ({ page = 1, limit = 6 } = {}) => {
+    const query = buildQueryParams({ page, limit });
+    return apiRequest(`/products/you-may-also-like${query}`, { method: 'GET' });
+  },
+
+  getProductById: async (productId) => {
+    return apiRequest(`/products/${productId}`, { method: 'GET' });
+  },
+
+  search: async (query, limit = 6) => {
+    const searchParams = buildQueryParams({ q: query, limit });
+    return apiRequest(`/products/search${searchParams}`, { method: 'GET' });
+  },
+};
+
+export default { authAPI, userAPI, orderAPI, productAPI };

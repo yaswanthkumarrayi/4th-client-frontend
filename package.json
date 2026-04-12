@@ -4,6 +4,7 @@
   "type": "module",
   "main": "postcss.config.js",
   "dependencies": {
+    "@tanstack/react-query": "^5.90.5",
     "@vitejs/plugin-react": "^4.3.1",
     "acorn": "^8.16.0",
     "acorn-jsx": "^5.3.2",

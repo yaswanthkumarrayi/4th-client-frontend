@@ -15,7 +15,13 @@ import OptimizedImage from '../components/OptimizedImage';
 
 const Product = () => {
   const { id } = useParams();
-  const { getProduct, getNewArrivals, loading: configLoading } = useProductConfig();
+  const {
+    getProduct,
+    getNewArrivals,
+    hasLoadedCatalog,
+    ensureProductsLoaded,
+    error: configError
+  } = useProductConfig();
   const { openCheckout } = useCheckout();
   const imageSliderRef = useRef(null);
 
@@ -29,6 +35,14 @@ const Product = () => {
   
   const { isCartOpen, closeCart, cartItems, updateQuantity: updateCartQuantity, removeItem, addToCart } = useCart();
 
+  useEffect(() => {
+    if (!hasLoadedCatalog) {
+      ensureProductsLoaded().catch(() => {
+        // Error state is already handled in context.
+      });
+    }
+  }, [ensureProductsLoaded, hasLoadedCatalog]);
+
   // Reset weight selection when product changes
   useEffect(() => {
     if (product?.weights?.[0]) {
@@ -36,10 +50,20 @@ const Product = () => {
     }
   }, [id, product]);
 
-  if (configLoading) {
+  if (!hasLoadedCatalog && !configError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!hasLoadedCatalog && configError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <p className="text-red-600 font-montserrat text-sm text-center">
+          Unable to load products right now. Please refresh the page.
+        </p>
       </div>
     );
   }
